@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Stamp</title>
+    <script src="elm.js"></script>
+  </head>
+  <body>
+    <script>
+      const storageKey = "store";
+      const flags = localStorage.getItem(storageKey);
+      const app = Elm.Main.init({ flags: flags });
+    </script>
+  </body>
+</html>
