@@ -1,9 +1,15 @@
 module Main exposing (main)
 
-import Browser
+import Browser exposing (Document)
 import Browser.Navigation as Nav
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Page
+import Page.Home as Home
+import Page.Login as Login
+import Page.Register as Register
+import Route exposing (Route)
+import Session exposing (Session(..))
 import Url
 
 
@@ -27,15 +33,15 @@ main =
 -- MODEL
 
 
-type alias Model =
-    { key : Nav.Key
-    , url : Url.Url
-    }
+type Model
+    = Home Home.Model
+    | Login Login.Model
+    | Register Register.Model
 
 
 init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url key =
-    ( Model key url, Cmd.none )
+    changeRouteTo (Route.fromUrl url) (Home { session = Session.Guest key })
 
 
 
@@ -45,23 +51,81 @@ init _ url key =
 type Msg
     = LinkClicked Browser.UrlRequest
     | UrlChanged Url.Url
+    | GotHomeMsg Home.Msg
+    | GotLoginMsg Login.Msg
+    | GotRegisterMsg Register.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
-        LinkClicked urlRequest ->
+    case ( msg, model ) of
+        ( LinkClicked urlRequest, _ ) ->
             case urlRequest of
                 Browser.Internal url ->
-                    ( model, Nav.pushUrl model.key (Url.toString url) )
+                    ( model, Nav.pushUrl (Session.navKey (toSession model)) (Url.toString url) )
 
                 Browser.External href ->
                     ( model, Nav.load href )
 
-        UrlChanged url ->
-            ( { model | url = url }
-            , Cmd.none
-            )
+        ( UrlChanged url, _ ) ->
+            changeRouteTo
+                (Route.fromUrl url)
+                model
+
+        ( GotHomeMsg _, Home home ) ->
+            ( Home home, Cmd.none )
+
+        ( GotLoginMsg _, Login login ) ->
+            ( Login login, Cmd.none )
+
+        ( GotRegisterMsg _, Register register ) ->
+            ( Register register, Cmd.none )
+
+        ( _, _ ) ->
+            ( model, Cmd.none )
+
+
+toSession : Model -> Session
+toSession model =
+    case model of
+        Home home ->
+            home.session
+
+        Login login ->
+            login.session
+
+        Register register ->
+            register.session
+
+
+changeRouteTo : Maybe Route -> Model -> ( Model, Cmd Msg )
+changeRouteTo route model =
+    let
+        session =
+            toSession model
+    in
+    case route of
+        Nothing ->
+            ( model, Cmd.none )
+
+        Just Route.Home ->
+            Home.init session
+                |> updateWith Home GotHomeMsg
+
+        Just Route.Login ->
+            Login.init session
+                |> updateWith Login GotLoginMsg
+
+        Just Route.Register ->
+            Register.init session
+                |> updateWith Register GotRegisterMsg
+
+
+updateWith : (subModel -> Model) -> (subMsg -> Msg) -> ( subModel, Cmd subMsg ) -> ( Model, Cmd Msg )
+updateWith toModel toMsg ( subModel, subCmd ) =
+    ( toModel subModel
+    , Cmd.map toMsg subCmd
+    )
 
 
 
@@ -77,29 +141,14 @@ subscriptions _ =
 -- VIEW
 
 
-view : Model -> Browser.Document Msg
+view : Model -> Document Msg
 view model =
-    { title = "Stamp"
-    , body =
-        [ div []
-            [ span []
-                [ text "Current URL:"
-                ]
-            , span []
-                [ text (Url.toString model.url)
-                ]
-            ]
-        , div []
-            [ ul []
-                [ li []
-                    [ viewLink "/" "Home"
-                    ]
-                ]
-            ]
-        ]
-    }
+    case model of
+        Home home ->
+            Page.view (Home.view home)
 
+        Login login ->
+            Page.view (Login.view login)
 
-viewLink : String -> String -> Html Msg
-viewLink url title =
-    a [ href url ] [ text title ]
+        Register register ->
+            Page.view (Register.view register)
