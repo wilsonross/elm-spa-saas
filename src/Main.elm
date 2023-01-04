@@ -4,7 +4,7 @@ import Browser exposing (Document)
 import Browser.Navigation as Nav
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Page
+import Page exposing (viewHeaderFooter)
 import Page.Home as Home
 import Page.Login as Login
 import Page.Register as Register
@@ -145,7 +145,7 @@ view : Model -> Document Msg
 view model =
     case model of
         Home home ->
-            Page.view (Home.view home)
+            Page.view (viewHeaderFooter (Home.view home))
 
         Login login ->
             Page.view (Login.view login)

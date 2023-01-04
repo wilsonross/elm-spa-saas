@@ -1,6 +1,6 @@
 module View exposing (..)
 
-import Html exposing (Html, a, text)
+import Html exposing (Html, a, p, text)
 import Html.Attributes exposing (..)
 
 
@@ -11,3 +11,13 @@ import Html.Attributes exposing (..)
 viewLink : String -> String -> Html msg
 viewLink url content =
     a [ href url ] [ text content ]
+
+
+viewHeader : Html msg
+viewHeader =
+    p [] [ text "Header" ]
+
+
+viewFooter : Html msg
+viewFooter =
+    p [] [ text "Footer" ]
