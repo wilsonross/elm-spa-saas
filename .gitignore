@@ -1,11 +1,4 @@
-# Package generated files
-elm-stuff
-
-# Repl generated files
-repl-temp-*
-
-# Output files
-elm.js
-
-# Filesystem
-.DS_Store
+node_modules/
+elm-stuff/
+dist/
+tmp/

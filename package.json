@@ -1,0 +1,21 @@
+{
+  "name": "elm-spa-saas",
+  "version": "1.0.0",
+  "description": "SaaS style single page application created with elm",
+  "scripts": {
+    "build": "webpack"
+  },
+  "author": "Ross Wilson",
+  "license": "MIT",
+  "private": true,
+  "devDependencies": {
+    "elm": "^0.19.1-5",
+    "elm-webpack-loader": "^8.0.0",
+    "html-webpack-plugin": "^5.5.0",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.3"
+  }
+}
