@@ -4,8 +4,9 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 dotEnv.config();
 
-const debug = process.env.npm_lifecycle_event === 'build' ? false : true;
+const debug = process.env.npm_lifecycle_event === "build" ? false : true;
 const mode = debug ? "development" : "production";
+const servePath = path.join(__dirname, "dist");
 const entryPath = path.join(__dirname, "src/static/index.js");
 const outputPath = path.join(__dirname, "dist");
 const outputFilename = !debug ? "[name]-[hash].js" : "[name].js";
@@ -45,5 +46,13 @@ module.exports = (env) => {
         filename: "index.html",
       }),
     ],
+    devServer: {
+      historyApiFallback: true,
+      static: {
+        directory: servePath,
+      },
+      port: 3000,
+      hot: true,
+    },
   };
 };

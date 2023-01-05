@@ -1,4 +1,9 @@
-var Elm = require("../elm/Main");
-var storageKey = "store";
-var flags = localStorage.getItem(storageKey);
-var app = Elm.Main.init({ flags: flags });
+import { Elm } from "../elm/Main";
+
+const flags = localStorage.getItem("store");
+const node = document.getElementById("main");
+
+Elm.Main.init({
+  flags: flags,
+  node: node,
+});

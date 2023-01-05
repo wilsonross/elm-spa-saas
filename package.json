@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "SaaS style single page application created with elm",
   "scripts": {
-    "build": "webpack"
+    "build": "webpack",
+    "start": "webpack serve"
   },
   "author": "Ross Wilson",
   "license": "MIT",
@@ -13,7 +14,8 @@
     "elm-webpack-loader": "^8.0.0",
     "html-webpack-plugin": "^5.5.0",
     "webpack": "^5.75.0",
-    "webpack-cli": "^5.0.1"
+    "webpack-cli": "^5.0.1",
+    "webpack-dev-server": "^4.11.1"
   },
   "dependencies": {
     "dotenv": "^16.0.3"
