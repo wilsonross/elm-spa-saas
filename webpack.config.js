@@ -1,6 +1,7 @@
 const dotEnv = require("dotenv");
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const CopyWebpackPlugin = require("copy-webpack-plugin");
 
 dotEnv.config();
 
@@ -44,6 +45,14 @@ module.exports = (env) => {
         template: "src/static/index.html",
         inject: "body",
         filename: "index.html",
+      }),
+      new CopyWebpackPlugin({
+        patterns: [
+          {
+            from: "src/static/img/",
+            to: "static/img/",
+          },
+        ],
       }),
     ],
     devServer: {
