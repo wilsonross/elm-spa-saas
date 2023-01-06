@@ -1,4 +1,4 @@
-module Session exposing (Session(..), navKey)
+module Session exposing (Flags, Session(..), navKey)
 
 import Browser.Navigation as Nav
 
@@ -8,7 +8,16 @@ import Browser.Navigation as Nav
 
 
 type Session
-    = Guest Nav.Key
+    = Guest { key : Nav.Key, flags : Flags }
+
+
+
+-- FLAGS
+
+
+type alias Flags =
+    { apiUrl : String
+    }
 
 
 
@@ -18,5 +27,5 @@ type Session
 navKey : Session -> Nav.Key
 navKey session =
     case session of
-        Guest key ->
+        Guest { key, flags } ->
             key

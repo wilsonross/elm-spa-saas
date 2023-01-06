@@ -9,17 +9,8 @@ import Page.Home as Home
 import Page.Login as Login
 import Page.Register as Register
 import Route exposing (Route)
-import Session exposing (Session(..))
+import Session exposing (Flags, Session(..))
 import Url
-
-
-
--- FLAGS
-
-
-type alias Flags =
-    { apiUrl : String
-    }
 
 
 
@@ -49,8 +40,8 @@ type Model
 
 
 init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
-init _ url key =
-    changeRouteTo (Route.fromUrl url) (Home { session = Session.Guest key })
+init flags url key =
+    changeRouteTo (Route.fromUrl url) (Home { session = Session.Guest { key = key, flags = flags } })
 
 
 
