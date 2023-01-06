@@ -14,10 +14,19 @@ import Url
 
 
 
+-- FLAGS
+
+
+type alias Flags =
+    { apiUrl : String
+    }
+
+
+
 -- MAIN
 
 
-main : Program () Model Msg
+main : Program Flags Model Msg
 main =
     Browser.application
         { init = init
@@ -39,7 +48,7 @@ type Model
     | Register Register.Model
 
 
-init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
+init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url key =
     changeRouteTo (Route.fromUrl url) (Home { session = Session.Guest key })
 

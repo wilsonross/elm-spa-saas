@@ -1,9 +1,7 @@
-const dotEnv = require("dotenv");
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
-
-dotEnv.config();
+const Dotenv = require("dotenv-webpack");
 
 const debug = process.env.npm_lifecycle_event === "build" ? false : true;
 const mode = debug ? "development" : "production";
@@ -21,6 +19,7 @@ module.exports = (env) => {
     output: {
       path: outputPath,
       filename: `static/js/${outputFilename}`,
+      clean: true,
     },
     resolve: {
       extensions: [".js", ".elm"],
@@ -54,6 +53,7 @@ module.exports = (env) => {
           },
         ],
       }),
+      new Dotenv(),
     ],
     devServer: {
       historyApiFallback: true,

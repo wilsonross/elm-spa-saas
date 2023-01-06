@@ -1,9 +1,11 @@
 import { Elm } from "../elm/Main";
 
-const flags = localStorage.getItem("store");
 const node = document.getElementById("main");
+const apiUrl = process.env.APP_API_URL;
 
 Elm.Main.init({
-  flags: flags,
   node: node,
+  flags: {
+    apiUrl: apiUrl,
+  },
 });
