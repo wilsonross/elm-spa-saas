@@ -21,7 +21,7 @@ viewHeaderFooter { title, content } =
     { title = title
     , content =
         div []
-            [ viewHeader
+            [ viewHeader [ { url = "/", title = "Home" } ]
             , content
             , viewFooter
             ]
