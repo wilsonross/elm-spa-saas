@@ -4,7 +4,7 @@ import Browser exposing (Document)
 import Browser.Navigation as Nav
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Page exposing (viewHeaderFooter)
+import Page
 import Page.Home as Home
 import Page.Login as Login
 import Page.Register as Register
@@ -41,7 +41,7 @@ type Model
 
 init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url key =
-    changeRouteTo (Route.fromUrl url) (Home { session = Session.Guest { key = key, flags = flags } })
+    changeRouteTo (Route.fromUrl url) (Home { session = Session.Guest { key = key, flags = flags }, links = Home.Loading })
 
 
 
@@ -72,8 +72,9 @@ update msg model =
                 (Route.fromUrl url)
                 model
 
-        ( GotHomeMsg _, Home home ) ->
-            ( Home home, Cmd.none )
+        ( GotHomeMsg subMsg, Home home ) ->
+            Home.update subMsg home
+                |> updateWith Home GotHomeMsg
 
         ( GotLoginMsg _, Login login ) ->
             ( Login login, Cmd.none )
@@ -145,7 +146,7 @@ view : Model -> Document Msg
 view model =
     case model of
         Home home ->
-            Page.view (viewHeaderFooter (Home.view home))
+            Page.view (Home.view home)
 
         Login login ->
             Page.view (Login.view login)
