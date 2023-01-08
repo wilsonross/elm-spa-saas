@@ -2,7 +2,7 @@ module Page.Home exposing (Model, Msg, Status(..), init, update, view)
 
 import Html exposing (Html, div, li, p, text, ul)
 import Http
-import Json.Decode as Decode exposing (Decoder, int, list, string)
+import Json.Decode as Decode exposing (Decoder, at, int, list, string)
 import Json.Decode.Pipeline exposing (custom, optional, required)
 import Session exposing (Session, apiUrl, joinUrl)
 import View exposing (Link, viewFooter, viewHeader, viewLink)
@@ -147,7 +147,7 @@ decodePaginatedResponse =
         |> required "perPage" int
         |> required "totalItems" int
         |> required "totalPages" int
-        |> custom (list decodeCollectionResponse)
+        |> custom (at [ "items" ] (list decodeCollectionResponse))
 
 
 decodeCollectionResponse : Decoder CollectionResponse
