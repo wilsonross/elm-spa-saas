@@ -65,6 +65,10 @@ module.exports = (env) => {
             from: "src/static/img/",
             to: "static/img/",
           },
+          {
+            from: "src/static/fonts/",
+            to: "static/fonts/",
+          },
         ],
       }),
       new MiniCssExtractPlugin({
