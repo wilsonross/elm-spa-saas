@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "SaaS style single page application created with elm",
   "scripts": {
-    "build": "webpack",
-    "start": "webpack serve"
+    "build": "webpack --config config/webpack.prod.js",
+    "start": "webpack serve --config config/webpack.dev.js"
   },
   "author": "Ross Wilson",
   "license": "MIT",
@@ -17,6 +17,7 @@
     "elm": "^0.19.1-5",
     "elm-webpack-loader": "^8.0.0",
     "html-webpack-plugin": "^5.5.0",
+    "mini-css-extract-plugin": "^2.7.2",
     "postcss": "^8.4.21",
     "postcss-loader": "^7.0.2",
     "style-loader": "^3.3.1",

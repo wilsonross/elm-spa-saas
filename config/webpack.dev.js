@@ -1,23 +1,19 @@
 const path = require("path");
 const autoprefixer = require("autoprefixer");
-const tailwindcss = require("tailwindcss");
+const tailwindcss = require("tailwindcss")("./config/tailwind.config.js");
 
 const Dotenv = require("dotenv-webpack");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 
-const development = process.env.npm_lifecycle_event === "build" ? false : true;
-const mode = development ? "development" : "production";
-const servePath = path.join(__dirname, "dist");
-const entryPath = path.join(__dirname, "src/static/index.js");
-const outputPath = path.join(__dirname, "dist");
-const outputFilename = !development ? "[name]-[hash].js" : "[name].js";
-
-console.log("Webpack mode: " + mode);
+const servePath = path.join(__dirname, "../dist");
+const entryPath = path.join(__dirname, "../src/static/index.js");
+const outputPath = path.join(__dirname, "../dist");
+const outputFilename = "[name].js";
 
 module.exports = (env) => {
   return {
-    mode: mode,
+    mode: "development",
     entry: entryPath,
     output: {
       path: outputPath,
