@@ -28,7 +28,7 @@ viewLinkImage url image =
     a [ href url ] [ img [ src image ] [] ]
 
 
-viewHeader : List Link -> Html msg
+viewHeader : Html msg -> Html msg
 viewHeader navLinks =
     div []
         [ viewLinkImage "/" "/static/img/logo.svg"
@@ -46,8 +46,7 @@ viewHeader navLinks =
         , button []
             [ img [ src "/static/img/menu.svg" ] []
             ]
-        , ul []
-            (List.map (\link -> li [] [ viewLink link.url link.title ]) navLinks)
+        , div [] [ navLinks ]
         ]
 
 

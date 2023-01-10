@@ -47,21 +47,13 @@ init session =
 view : Model -> { title : String, content : Html msg }
 view model =
     let
-        header =
-            case model.links of
-                Failure ->
-                    text "Failed to load links"
-
-                Loading ->
-                    text "Loading links..."
-
-                Success paginatedResponse ->
-                    viewHeader (paginatedResponseToLinks paginatedResponse)
+        navLinks =
+            viewNavLinks model.links
     in
     { title = "Stamp | Send Mail With Code"
     , content =
         div []
-            [ header
+            [ viewHeader navLinks
             , div []
                 [ ul []
                     [ li [] [ viewLink "/" "Home" ]
@@ -73,6 +65,22 @@ view model =
             , viewFooter
             ]
     }
+
+
+viewNavLinks : Status -> Html msg
+viewNavLinks status =
+    case status of
+        Failure ->
+            div []
+                [ text "Failed to load links" ]
+
+        Loading ->
+            div []
+                [ text "Fetching links" ]
+
+        Success paginatedResponse ->
+            ul []
+                (List.map (\link -> li [] [ viewLink link.url link.title ]) (paginatedResponseToLinks paginatedResponse))
 
 
 
