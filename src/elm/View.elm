@@ -46,8 +46,8 @@ viewButtonImage attr click image =
         ]
 
 
-viewHeader : Html msg -> Html msg
-viewHeader navLinks =
+viewHeader : Html msg -> Html msg -> Html msg
+viewHeader navButton navLinks =
     div
         [ class <|
             "flex h-20 mx-auto px-5 items-center max-w-[76.5rem] w-full gap-9"
@@ -81,13 +81,7 @@ viewHeader navLinks =
                 "/register"
                 "/static/img/register.svg"
             ]
-        , button [ class "block w-6 h-6" ]
-            [ img
-                [ src "/static/img/menu.svg"
-                , class "block w-full h-full"
-                ]
-                []
-            ]
+        , navButton
         , div
             [ class <|
                 "fixed top-0 right-0 bottom-0 w-[21.25rem] translate-x-full"

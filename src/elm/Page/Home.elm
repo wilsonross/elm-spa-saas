@@ -1,11 +1,12 @@
 module Page.Home exposing (Model, Msg, Status(..), init, update, view)
 
 import Html exposing (Html, div, li, p, text, ul)
+import Html.Attributes exposing (class)
 import Http
 import Json.Decode as Decode exposing (Decoder, at, int, list, string)
 import Json.Decode.Pipeline exposing (custom, optional, required)
 import Session exposing (Session, apiUrl, joinUrl)
-import View exposing (Link, viewFooter, viewHeader, viewLink)
+import View exposing (Link, viewButtonImage, viewFooter, viewHeader, viewLink)
 
 
 
@@ -46,7 +47,7 @@ init session =
 -- VIEW
 
 
-view : Model -> { title : String, content : Html msg }
+view : Model -> { title : String, content : Html Msg }
 view model =
     let
         navLinks =
@@ -55,7 +56,7 @@ view model =
     { title = "Stamp | Send Mail With Code"
     , content =
         div []
-            [ viewHeader navLinks
+            [ viewHeader viewNavButton navLinks
             , div []
                 [ ul []
                     [ li [] [ viewLink "/" "Home" ]
@@ -85,6 +86,15 @@ viewNavLinks status =
                 (List.map (\link -> li [] [ viewLink link.url link.title ]) (paginatedResponseToLinks paginatedResponse))
 
 
+viewNavButton : Html Msg
+viewNavButton =
+    viewButtonImage
+        [ class "block w-6 h-6"
+        ]
+        NavToggle
+        "/static/img/menu.svg"
+
+
 
 -- UPDATE
 
@@ -110,7 +120,9 @@ update msg model =
                     )
 
         NavToggle ->
-            ( model, Cmd.none )
+            ( { model | navOpen = not model.navOpen }
+            , Cmd.none
+            )
 
 
 

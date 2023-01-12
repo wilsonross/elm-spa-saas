@@ -155,7 +155,7 @@ view : Model -> Document Msg
 view model =
     case model of
         Home home ->
-            Page.view (Home.view home)
+            Page.viewPage GotHomeMsg (Home.view home)
 
         Login login ->
             Page.view (Login.view login)
