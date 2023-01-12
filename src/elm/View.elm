@@ -2,6 +2,7 @@ module View exposing (..)
 
 import Html exposing (Attribute, Html, a, button, div, form, img, input, li, p, text, ul)
 import Html.Attributes exposing (class, href, placeholder, src)
+import Html.Events exposing (onClick)
 
 
 
@@ -34,6 +35,17 @@ viewLinkImage attr url image =
         ]
 
 
+viewButtonImage : List (Attribute msg) -> msg -> String -> Html msg
+viewButtonImage attr click image =
+    button (onClick click :: (class "block" :: attr))
+        [ img
+            [ src image
+            , class "block h-full w-full"
+            ]
+            []
+        ]
+
+
 viewHeader : Html msg -> Html msg
 viewHeader navLinks =
     div
@@ -41,7 +53,7 @@ viewHeader navLinks =
             "flex h-20 mx-auto px-5 items-center max-w-[76.5rem] w-full gap-9"
         ]
         [ viewLinkImage
-            [ class "mr-auto w-[115px] h-[35px] block"
+            [ class "mr-auto w-[115px] h-[35px]"
             ]
             "/"
             "/static/img/logo.svg"

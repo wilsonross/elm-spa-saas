@@ -41,7 +41,16 @@ type Model
 
 init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url key =
-    changeRouteTo (Route.fromUrl url) (Home { session = Session.Guest { key = key, flags = flags }, links = Home.Loading })
+    changeRouteTo
+        (Route.fromUrl url)
+        (Home
+            { session =
+                Session.Guest
+                    { key = key, flags = flags }
+            , links = Home.Loading
+            , navOpen = False
+            }
+        )
 
 
 

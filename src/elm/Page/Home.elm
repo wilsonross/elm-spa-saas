@@ -15,6 +15,7 @@ import View exposing (Link, viewFooter, viewHeader, viewLink)
 type alias Model =
     { session : Session
     , links : Status
+    , navOpen : Bool
     }
 
 
@@ -32,6 +33,7 @@ init session =
     in
     ( { session = session
       , links = Loading
+      , navOpen = False
       }
     , Http.get
         { url = joinUrl url "/api/collections/links/records"
@@ -89,6 +91,7 @@ viewNavLinks status =
 
 type Msg
     = GotPaginatedResponse (Result Http.Error PaginatedResponse)
+    | NavToggle
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -105,6 +108,9 @@ update msg model =
                     ( { model | links = Failure }
                     , Cmd.none
                     )
+
+        NavToggle ->
+            ( model, Cmd.none )
 
 
 
