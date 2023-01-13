@@ -1,5 +1,6 @@
 module Page.Home exposing (Model, Msg, Status(..), init, update, view)
 
+import Compare exposing (Comparator)
 import Html exposing (Html, div, li, p, text, ul)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
@@ -86,10 +87,14 @@ viewNavLinks status =
                 [ text "Fetching links" ]
 
         Success paginatedResponse ->
+            let
+                sortedLinks =
+                    sortLinks (paginatedResponseToLinks paginatedResponse)
+            in
             ul []
                 (List.map
                     (\link -> li [] [ viewLink link.url link.title ])
-                    (paginatedResponseToLinks paginatedResponse)
+                    sortedLinks
                 )
 
 
@@ -181,6 +186,7 @@ paginatedResponseToLinks response =
         (\record ->
             { url = record.href
             , title = record.title
+            , sortOrder = record.order
             }
         )
         response.items
@@ -233,3 +239,27 @@ decodeCollectionResponse =
         |> optional "order" int 0
         |> required "title" string
         |> required "updated" string
+
+
+
+-- SORTING
+
+
+nameComparator : Comparator Link
+nameComparator =
+    Compare.by .title
+
+
+sortOrderComparator : Comparator Link
+sortOrderComparator =
+    Compare.by .sortOrder
+
+
+linkComparator : Comparator Link
+linkComparator =
+    Compare.concat [ sortOrderComparator, nameComparator ]
+
+
+sortLinks : List Link -> List Link
+sortLinks =
+    List.sortWith linkComparator

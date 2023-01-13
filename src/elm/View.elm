@@ -12,6 +12,7 @@ import Html.Events exposing (onClick)
 type alias Link =
     { url : String
     , title : String
+    , sortOrder : Int
     }
 
 
