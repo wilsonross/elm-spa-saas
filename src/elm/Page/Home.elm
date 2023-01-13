@@ -2,6 +2,7 @@ module Page.Home exposing (Model, Msg, Status(..), init, update, view)
 
 import Html exposing (Html, div, li, p, text, ul)
 import Html.Attributes exposing (class)
+import Html.Events exposing (onClick)
 import Http
 import Json.Decode as Decode exposing (Decoder, at, int, list, string)
 import Json.Decode.Pipeline exposing (custom, optional, required)
@@ -56,7 +57,10 @@ view model =
     { title = "Stamp | Send Mail With Code"
     , content =
         div []
-            [ viewHeader (viewNav model navLinks) viewNavButton
+            [ viewHeader
+                (viewNav model navLinks)
+                (viewOverlay model)
+                viewNavButton
             , div []
                 [ ul []
                     [ li [] [ viewLink "/" "Home" ]
@@ -98,7 +102,7 @@ viewNavButton =
         "/static/img/menu.svg"
 
 
-viewNav : Model -> Html msg -> Html msg
+viewNav : Model -> Html Msg -> Html Msg
 viewNav model navLinks =
     let
         navClass =
@@ -110,11 +114,31 @@ viewNav model navLinks =
     in
     div
         [ class <|
-            "fixed top-0 right-0 bottom-0 w-[21.25rem] transition-transform"
+            "fixed top-0 right-0 bottom-0 max-w-xs w-full transition-transform"
                 ++ " duration-500 bg-white"
                 ++ navClass
         ]
-        [ navLinks ]
+        [ navLinks
+        ]
+
+
+viewOverlay : Model -> Html Msg
+viewOverlay model =
+    let
+        overlayClass =
+            if not model.navOpen then
+                " opacity-0 pointer-events-none"
+
+            else
+                " opacity-[.14]"
+    in
+    div
+        [ class <|
+            "fixed inset-0 bg-black transition-opacity duration-500"
+                ++ overlayClass
+        , onClick NavToggle
+        ]
+        []
 
 
 

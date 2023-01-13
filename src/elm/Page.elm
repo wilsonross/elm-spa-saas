@@ -18,5 +18,5 @@ view { title, content } =
 viewPage : (a -> msg) -> { title : String, content : Html a } -> Document msg
 viewPage toMsg { title, content } =
     { title = title
-    , body = List.map (Html.map toMsg) [ content ]
+    , body = [ Html.map toMsg content ]
     }

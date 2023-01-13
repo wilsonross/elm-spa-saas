@@ -46,43 +46,59 @@ viewButtonImage attr click image =
         ]
 
 
-viewHeader : Html msg -> Html msg -> Html msg
-viewHeader nav navButton =
+viewHeader : Html msg -> Html msg -> Html msg -> Html msg
+viewHeader nav overlay navButton =
     div
         [ class <|
             "flex h-20 mx-auto px-5 items-center max-w-[76.5rem] w-full gap-9"
         ]
-        [ viewLinkImage
-            [ class "mr-auto w-[115px] h-[35px]"
-            ]
-            "/"
-            "/static/img/logo.svg"
-        , form
-            [ class <|
-                "bg-grey-0 rounded-md flex px-[11px] w-[16.625rem] h-10"
-                    ++ " items-center"
-            ]
-            [ input
-                [ placeholder "Find design"
-                , class <|
-                    "bg-grey-0 focus-visible:outline-none w-full pt-[2px]"
-                        ++ " placeholder:grey-2"
-                ]
-                []
-            , button [ class "h-5 w-5 shrink-0" ]
-                [ img [ src "/static/img/search.svg" ] []
-                ]
-            ]
-        , div [ class "flex gap-9" ]
-            [ viewLinkImage [ class "w-[41px] h-[18px]" ]
-                "/login"
-                "/static/img/login.svg"
-            , viewLinkImage [ class "w-[61px] h-[18px]" ]
-                "/register"
-                "/static/img/register.svg"
-            ]
+        [ viewLogo
+        , viewSearch
+        , viewAuthLinks
         , navButton
+        , overlay
         , nav
+        ]
+
+
+viewLogo : Html msg
+viewLogo =
+    viewLinkImage
+        [ class "mr-auto w-[115px] h-[35px]"
+        ]
+        "/"
+        "/static/img/logo.svg"
+
+
+viewSearch : Html msg
+viewSearch =
+    form
+        [ class <|
+            "bg-grey-0 rounded-md flex px-[11px] w-[16.625rem] h-10"
+                ++ " items-center"
+        ]
+        [ input
+            [ placeholder "Find design"
+            , class <|
+                "bg-grey-0 focus-visible:outline-none w-full pt-[2px]"
+                    ++ " placeholder:grey-2"
+            ]
+            []
+        , button [ class "h-5 w-5 shrink-0" ]
+            [ img [ src "/static/img/search.svg" ] []
+            ]
+        ]
+
+
+viewAuthLinks : Html msg
+viewAuthLinks =
+    div [ class "flex gap-9" ]
+        [ viewLinkImage [ class "w-[41px] h-[18px]" ]
+            "/login"
+            "/static/img/login.svg"
+        , viewLinkImage [ class "w-[61px] h-[18px]" ]
+            "/register"
+            "/static/img/register.svg"
         ]
 
 
