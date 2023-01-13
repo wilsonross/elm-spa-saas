@@ -71,7 +71,11 @@ update msg model =
         ( LinkClicked urlRequest, _ ) ->
             case urlRequest of
                 Browser.Internal url ->
-                    ( model, Nav.pushUrl (Session.navKey (toSession model)) (Url.toString url) )
+                    ( model
+                    , Nav.pushUrl
+                        (Session.navKey (toSession model))
+                        (Url.toString url)
+                    )
 
                 Browser.External href ->
                     ( model, Nav.load href )

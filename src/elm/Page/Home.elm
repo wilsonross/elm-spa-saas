@@ -64,9 +64,9 @@ view model =
                 viewNavButton
             , div []
                 [ ul []
-                    [ li [] [ viewLink "/" "Home" ]
-                    , li [] [ viewLink "/login" "Login" ]
-                    , li [] [ viewLink "/register" "Register" ]
+                    [ li [] [ viewLink [] "/" "Home" ]
+                    , li [] [ viewLink [] "/login" "Login" ]
+                    , li [] [ viewLink [] "/register" "Register" ]
                     ]
                 , p [] [ text "Home" ]
                 ]
@@ -93,7 +93,15 @@ viewNavLinks status =
             in
             ul []
                 (List.map
-                    (\link -> li [] [ viewLink link.url link.title ])
+                    (\link ->
+                        li [ class "mb-8" ]
+                            [ viewLink
+                                [ class "text-xl"
+                                ]
+                                link.url
+                                link.title
+                            ]
+                    )
                     sortedLinks
                 )
 
@@ -105,6 +113,15 @@ viewNavButton =
         ]
         NavToggle
         "/static/img/menu.svg"
+
+
+viewNavCloseButton : Html Msg
+viewNavCloseButton =
+    viewButtonImage
+        [ class "block w-6 h-6 ml-auto mb-32"
+        ]
+        NavToggle
+        "/static/img/close.svg"
 
 
 viewNav : Model -> Html Msg -> Html Msg
@@ -119,11 +136,13 @@ viewNav model navLinks =
     in
     div
         [ class <|
-            "fixed top-0 right-0 bottom-0 max-w-xs w-full transition-transform"
-                ++ " duration-500 bg-white"
+            "fixed top-0 right-0 bottom-0 max-w-[21.25rem] duration-500"
+                ++ " transition-transform bg-white px-[3.125rem] py-7 w-full"
+                ++ " text-right"
                 ++ navClass
         ]
-        [ navLinks
+        [ viewNavCloseButton
+        , navLinks
         ]
 
 

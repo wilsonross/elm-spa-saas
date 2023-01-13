@@ -31,9 +31,9 @@ view _ =
     , content =
         div []
             [ ul []
-                [ li [] [ viewLink "/" "Home" ]
-                , li [] [ viewLink "/login" "Login" ]
-                , li [] [ viewLink "/register" "Register" ]
+                [ li [] [ viewLink [] "/" "Home" ]
+                , li [] [ viewLink [] "/login" "Login" ]
+                , li [] [ viewLink [] "/register" "Register" ]
                 ]
             , p [] [ text "Register" ]
             ]

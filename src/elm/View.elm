@@ -20,9 +20,9 @@ type alias Link =
 -- VIEW FUNCTIONS
 
 
-viewLink : String -> String -> Html msg
-viewLink url content =
-    a [ href url ] [ text content ]
+viewLink : List (Attribute msg) -> String -> String -> Html msg
+viewLink attr url content =
+    a (href url :: attr) [ text content ]
 
 
 viewLinkImage : List (Attribute msg) -> String -> String -> Html msg
