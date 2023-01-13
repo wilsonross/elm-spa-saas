@@ -56,7 +56,7 @@ view model =
     { title = "Stamp | Send Mail With Code"
     , content =
         div []
-            [ viewHeader viewNavButton navLinks
+            [ viewHeader (viewNav model navLinks) viewNavButton
             , div []
                 [ ul []
                     [ li [] [ viewLink "/" "Home" ]
@@ -83,7 +83,10 @@ viewNavLinks status =
 
         Success paginatedResponse ->
             ul []
-                (List.map (\link -> li [] [ viewLink link.url link.title ]) (paginatedResponseToLinks paginatedResponse))
+                (List.map
+                    (\link -> li [] [ viewLink link.url link.title ])
+                    (paginatedResponseToLinks paginatedResponse)
+                )
 
 
 viewNavButton : Html Msg
@@ -93,6 +96,25 @@ viewNavButton =
         ]
         NavToggle
         "/static/img/menu.svg"
+
+
+viewNav : Model -> Html msg -> Html msg
+viewNav model navLinks =
+    let
+        navClass =
+            if not model.navOpen then
+                " translate-x-full"
+
+            else
+                ""
+    in
+    div
+        [ class <|
+            "fixed top-0 right-0 bottom-0 w-[21.25rem] transition-transform"
+                ++ " duration-500 bg-white"
+                ++ navClass
+        ]
+        [ navLinks ]
 
 
 
