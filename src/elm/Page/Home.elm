@@ -1,13 +1,13 @@
 module Page.Home exposing (Model, Msg, Status(..), init, update, view)
 
 import Compare exposing (Comparator)
-import Html exposing (Html, div, li, p, text, ul)
-import Html.Attributes exposing (class)
+import Html exposing (Html, div, img, li, p, text, ul)
+import Html.Attributes exposing (class, src)
 import Html.Events exposing (onClick)
 import Http
 import Json.Decode as Decode exposing (Decoder, at, int, list, string)
 import Json.Decode.Pipeline exposing (custom, optional, required)
-import Session exposing (Session, apiUrl, joinUrl)
+import Session exposing (Session, apiUrl, joinUrl, pathFromSession)
 import View exposing (Link, viewButtonImage, viewFooter, viewHeader, viewLink)
 
 
@@ -51,15 +51,11 @@ init session =
 
 view : Model -> { title : String, content : Html Msg }
 view model =
-    let
-        navLinks =
-            viewNavLinks model.links
-    in
     { title = "Stamp | Send Mail With Code"
     , content =
         div []
             [ viewHeader
-                (viewNav model navLinks)
+                (viewNav model)
                 (viewOverlay model)
                 viewNavButton
             , div []
@@ -75,8 +71,12 @@ view model =
     }
 
 
-viewNavLinks : Status -> Html msg
-viewNavLinks status =
+viewNavLinks : Model -> Html msg
+viewNavLinks model =
+    let
+        status =
+            model.links
+    in
     case status of
         Failure ->
             div []
@@ -94,16 +94,24 @@ viewNavLinks status =
             ul []
                 (List.map
                     (\link ->
-                        li [ class "mb-8" ]
-                            [ viewLink
-                                [ class "text-xl"
-                                ]
-                                link.url
-                                link.title
-                            ]
+                        viewNavLink link model
                     )
                     sortedLinks
                 )
+
+
+viewNavLink : Link -> Model -> Html msg
+viewNavLink link model =
+    li [ class "mb-8 flex items-center justify-end gap-[.875rem]" ]
+        [ viewActiveNavLink (pathFromSession model.session) link
+        , div []
+            [ viewLink
+                [ class "text-xl align-text-top"
+                ]
+                link.url
+                link.title
+            ]
+        ]
 
 
 viewNavButton : Html Msg
@@ -124,8 +132,8 @@ viewNavCloseButton =
         "/static/img/close.svg"
 
 
-viewNav : Model -> Html Msg -> Html Msg
-viewNav model navLinks =
+viewNav : Model -> Html Msg
+viewNav model =
     let
         navClass =
             if not model.navOpen then
@@ -138,11 +146,10 @@ viewNav model navLinks =
         [ class <|
             "fixed top-0 right-0 bottom-0 max-w-[21.25rem] duration-500"
                 ++ " transition-transform bg-white px-[3.125rem] py-7 w-full"
-                ++ " text-right"
                 ++ navClass
         ]
         [ viewNavCloseButton
-        , navLinks
+        , viewNavLinks model
         ]
 
 
@@ -163,6 +170,25 @@ viewOverlay model =
         , onClick NavToggle
         ]
         []
+
+
+viewActiveNavLink : String -> Link -> Html msg
+viewActiveNavLink path link =
+    let
+        circle =
+            if path == link.url then
+                img
+                    [ src "/static/img/circle.svg"
+                    , class "w-full h-full block shrink-0"
+                    ]
+                    []
+
+            else
+                text ""
+    in
+    div [ class "w-2 h-2" ]
+        [ circle
+        ]
 
 
 

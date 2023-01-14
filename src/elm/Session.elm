@@ -1,6 +1,7 @@
-module Session exposing (Flags, Session(..), apiUrl, joinUrl, navKey)
+module Session exposing (Flags, Session(..), apiUrl, joinUrl, navKey, pathFromSession, updateSessionPath)
 
 import Browser.Navigation as Nav
+import Url
 
 
 
@@ -8,7 +9,7 @@ import Browser.Navigation as Nav
 
 
 type Session
-    = Guest { key : Nav.Key, flags : Flags }
+    = Guest { key : Nav.Key, flags : Flags, path : String }
 
 
 
@@ -48,3 +49,18 @@ joinUrl url path =
 
     else
         url ++ path
+
+
+updateSessionPath : Url.Url -> Session -> Session
+updateSessionPath url session =
+    case session of
+        Guest guest ->
+            Guest
+                { guest | path = url.path }
+
+
+pathFromSession : Session -> String
+pathFromSession session =
+    case session of
+        Guest guest ->
+            guest.path

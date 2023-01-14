@@ -8,7 +8,7 @@ import Page
 import Page.Home as Home
 import Page.Login as Login
 import Page.Register as Register
-import Route exposing (Route)
+import Route
 import Session exposing (Flags, Session(..))
 import Url
 
@@ -42,11 +42,11 @@ type Model
 init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url key =
     changeRouteTo
-        (Route.fromUrl url)
+        url
         (Home
             { session =
                 Session.Guest
-                    { key = key, flags = flags }
+                    { key = key, flags = flags, path = url.path }
             , links = Home.Loading
             , navOpen = False
             }
@@ -82,7 +82,7 @@ update msg model =
 
         ( UrlChanged url, _ ) ->
             changeRouteTo
-                (Route.fromUrl url)
+                url
                 model
 
         ( GotHomeMsg subMsg, Home home ) ->
@@ -112,13 +112,13 @@ toSession model =
             register.session
 
 
-changeRouteTo : Maybe Route -> Model -> ( Model, Cmd Msg )
-changeRouteTo route model =
+changeRouteTo : Url.Url -> Model -> ( Model, Cmd Msg )
+changeRouteTo url model =
     let
         session =
-            toSession model
+            toSession model |> Session.updateSessionPath url
     in
-    case route of
+    case Route.fromUrl url of
         Nothing ->
             ( model, Cmd.none )
 

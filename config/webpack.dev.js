@@ -81,5 +81,9 @@ module.exports = (env) => {
       port: 3000,
       hot: true,
     },
+    stats: {
+      assets: false,
+      modules: false,
+    },
   };
 };
