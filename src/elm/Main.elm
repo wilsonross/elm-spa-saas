@@ -49,6 +49,7 @@ init flags url key =
                     { key = key, flags = flags, path = url.path }
             , links = Home.Loading
             , navOpen = False
+            , mobileSearchOpen = False
             }
         )
 

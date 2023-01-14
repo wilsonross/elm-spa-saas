@@ -1,8 +1,8 @@
 module Page.Home exposing (Model, Msg, Status(..), init, update, view)
 
 import Compare exposing (Comparator)
-import Html exposing (Html, div, img, li, p, text, ul)
-import Html.Attributes exposing (class, src)
+import Html exposing (Html, div, form, img, input, li, p, text, ul)
+import Html.Attributes exposing (class, placeholder, src)
 import Html.Events exposing (onClick)
 import Http
 import Json.Decode as Decode exposing (Decoder, at, int, list, string)
@@ -19,6 +19,7 @@ type alias Model =
     { session : Session
     , links : Status
     , navOpen : Bool
+    , mobileSearchOpen : Bool
     }
 
 
@@ -37,6 +38,7 @@ init session =
     ( { session = session
       , links = Loading
       , navOpen = False
+      , mobileSearchOpen = False
       }
     , Http.get
         { url = joinUrl url "/api/collections/links/records"
@@ -58,6 +60,7 @@ view model =
                 (viewNav model)
                 (viewOverlay model)
                 viewNavButton
+                (viewMobileSearch model)
             , div []
                 [ ul []
                     [ li [] [ viewLink [] "/" "Home" ]
@@ -191,6 +194,41 @@ viewActiveNavLink path link =
         ]
 
 
+viewMobileSearch : Model -> Html Msg
+viewMobileSearch model =
+    let
+        searchClass =
+            if not model.mobileSearchOpen then
+                " -translate-y-[200%]"
+
+            else
+                ""
+    in
+    div [ class "md:hidden" ]
+        [ viewButtonImage [ class "h-5 w-5" ]
+            MobileSearchToggle
+            "/static/img/search.svg"
+        , form
+            [ class <|
+                "bg-white rounded-md px-[13px] h-12 items-center flex"
+                    ++ " top-3 right-6 left-6 fixed transition-transform"
+                    ++ " duration-300 shadow-modal"
+                    ++ searchClass
+            ]
+            [ input
+                [ placeholder "Find design"
+                , class <|
+                    "focus-visible:outline-none w-full pt-[2px]"
+                        ++ " placeholder:grey-2"
+                ]
+                []
+            , viewButtonImage [ class "h-5 w-5" ]
+                MobileSearchToggle
+                "/static/img/close.svg"
+            ]
+        ]
+
+
 
 -- UPDATE
 
@@ -198,6 +236,7 @@ viewActiveNavLink path link =
 type Msg
     = GotPaginatedResponse (Result Http.Error PaginatedResponse)
     | NavToggle
+    | MobileSearchToggle
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -217,6 +256,11 @@ update msg model =
 
         NavToggle ->
             ( { model | navOpen = not model.navOpen }
+            , Cmd.none
+            )
+
+        MobileSearchToggle ->
+            ( { model | mobileSearchOpen = not model.mobileSearchOpen }
             , Cmd.none
             )
 

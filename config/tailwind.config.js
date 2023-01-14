@@ -18,6 +18,9 @@ module.exports = {
         2: "#A5B1C2",
       },
     },
+    boxShadow: {
+		modal: "0 5px 30px -5px rgba(0, 0, 0, 0.15)"
+	},
   },
   plugins: [],
 };

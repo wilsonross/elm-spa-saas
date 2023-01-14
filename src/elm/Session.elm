@@ -28,7 +28,7 @@ type alias Flags =
 navKey : Session -> Nav.Key
 navKey session =
     case session of
-        Guest { key, flags } ->
+        Guest { key } ->
             key
 
 

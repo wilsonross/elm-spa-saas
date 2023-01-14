@@ -1,8 +1,9 @@
 module View exposing (..)
 
-import Html exposing (Attribute, Html, a, button, div, form, img, input, li, p, text, ul)
+import Html exposing (Attribute, Html, a, button, div, form, img, input, p, text)
 import Html.Attributes exposing (class, href, placeholder, src)
-import Html.Events exposing (onClick)
+import Html.Events exposing (custom)
+import Json.Decode as Decode
 
 
 
@@ -38,7 +39,15 @@ viewLinkImage attr url image =
 
 viewButtonImage : List (Attribute msg) -> msg -> String -> Html msg
 viewButtonImage attr click image =
-    button (onClick click :: (class "block" :: attr))
+    let
+        options =
+            Decode.succeed
+                { message = click
+                , stopPropagation = True
+                , preventDefault = True
+                }
+    in
+    button (custom "click" options :: (class "block shrink-0" :: attr))
         [ img
             [ src image
             , class "block h-full w-full"
@@ -47,14 +56,16 @@ viewButtonImage attr click image =
         ]
 
 
-viewHeader : Html msg -> Html msg -> Html msg -> Html msg
-viewHeader nav overlay navButton =
+viewHeader : Html msg -> Html msg -> Html msg -> Html msg -> Html msg
+viewHeader nav overlay navButton mobileSearch =
     div
         [ class <|
-            "flex h-20 mx-auto px-5 items-center max-w-[76.5rem] w-full gap-9"
+            "flex h-20 mx-auto px-9 lg:px-5 items-center max-w-[76.5rem]"
+                ++ " w-full gap-9"
         ]
         [ viewLogo
-        , viewSearch
+        , viewDesktopSearch
+        , mobileSearch
         , viewAuthLinks
         , navButton
         , overlay
@@ -71,11 +82,11 @@ viewLogo =
         "/static/img/logo.svg"
 
 
-viewSearch : Html msg
-viewSearch =
+viewDesktopSearch : Html msg
+viewDesktopSearch =
     form
         [ class <|
-            "bg-grey-0 rounded-md flex px-[11px] w-[16.625rem] h-10"
+            "bg-grey-0 rounded-md px-[11px] w-[16.625rem] h-10 hidden md:flex"
                 ++ " items-center"
         ]
         [ input
