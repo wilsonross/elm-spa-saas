@@ -1,7 +1,7 @@
 module Page exposing (..)
 
 import Browser exposing (Document)
-import Html exposing (Html, div)
+import Html exposing (Html)
 
 
 

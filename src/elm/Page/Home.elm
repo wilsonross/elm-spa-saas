@@ -20,13 +20,13 @@ type alias Model =
 init : Session -> ( Model, Cmd Msg )
 init session =
     let
-        ( header, _ ) =
+        ( header, subMsg ) =
             Header.init (apiUrl session) (pathFromSession session)
     in
     ( { session = session
       , header = header
       }
-    , Cmd.none
+    , Cmd.map GotHeaderMsg subMsg
     )
 
 
@@ -74,8 +74,8 @@ update msg model =
                 |> updateWith model GotHeaderMsg
 
 
-updateWith : Model -> (subMsg -> Msg) -> ( subModel, Cmd subMsg ) -> ( Model, Cmd Msg )
+updateWith : Model -> (subMsg -> Msg) -> ( Header.Model, Cmd subMsg ) -> ( Model, Cmd Msg )
 updateWith model toMsg ( subModel, subCmd ) =
-    ( model
+    ( { model | header = subModel }
     , Cmd.map toMsg subCmd
     )
