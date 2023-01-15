@@ -19,7 +19,10 @@ module.exports = {
       },
     },
     boxShadow: {
-		modal: "0 5px 30px -5px rgba(0, 0, 0, 0.15)"
+      modal: "0 5px 30px -5px rgba(0, 0, 0, 0.15)",
+    },
+    backgroundImage: {
+		"navblur": "url('img/navblur.svg')"
 	},
   },
   plugins: [],

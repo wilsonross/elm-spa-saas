@@ -104,7 +104,7 @@ view model =
     div
         [ class <|
             "flex h-20 mx-auto px-9 lg:px-5 items-center max-w-[76.5rem]"
-                ++ " w-full gap-9"
+                ++ " w-full gap-6 sm:gap-9"
         ]
         [ viewLogo
         , viewDesktopSearch
@@ -173,11 +173,11 @@ viewDesktopSearch =
 
 viewAuthLinks : Html Msg
 viewAuthLinks =
-    div [ class "flex gap-9" ]
+    div [ class "flex gap-6 sm:gap-9" ]
         [ viewLinkImage [ class "w-[41px] h-[18px]" ]
             "/login"
             "/static/img/login.svg"
-        , viewLinkImage [ class "w-[61px] h-[18px]" ]
+        , viewLinkImage [ class "w-[61px] h-[18px] hidden sm:block" ]
             "/register"
             "/static/img/register.svg"
         ]
@@ -225,6 +225,7 @@ viewNav model =
         [ class <|
             "fixed top-0 right-0 bottom-0 max-w-[21.25rem] duration-500"
                 ++ " transition-transform bg-white px-[3.125rem] py-7 w-full"
+                ++ " bg-navblur bg-no-repeat bg-cover bg-right-bottom"
                 ++ navClass
         ]
         [ viewNavCloseButton
