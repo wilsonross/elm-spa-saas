@@ -1,4 +1,4 @@
-module Page exposing (view, viewPage)
+module Page exposing (..)
 
 import Browser exposing (Document)
 import Html exposing (Html, div)
@@ -20,3 +20,8 @@ viewPage toMsg { title, content } =
     { title = title
     , body = [ Html.map toMsg content ]
     }
+
+
+viewComponent : (a -> msg) -> Html a -> Html msg
+viewComponent toMsg content =
+    Html.map toMsg content

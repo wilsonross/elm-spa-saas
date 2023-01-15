@@ -7,7 +7,7 @@ import Html.Events exposing (onClick)
 import Http
 import Json.Decode as Decode exposing (Decoder, at, int, list, string)
 import Json.Decode.Pipeline exposing (custom, optional, required)
-import Session exposing (Session, apiUrl, joinUrl, pathFromSession)
+import Session exposing (apiUrl, joinUrl)
 import View exposing (Link, viewButtonImage, viewLink, viewLinkImage, viewLogo)
 
 
@@ -16,10 +16,10 @@ import View exposing (Link, viewButtonImage, viewLink, viewLinkImage, viewLogo)
 
 
 type alias Model =
-    { session : Session
-    , links : Status
+    { links : Status
     , navOpen : Bool
     , mobileSearchOpen : Bool
+    , path : String
     }
 
 
@@ -29,19 +29,15 @@ type Status
     | Success PaginatedResponse
 
 
-init : Session -> ( Model, Cmd Msg )
-init session =
-    let
-        url =
-            apiUrl session
-    in
-    ( { session = session
-      , links = Loading
+init : String -> String -> ( Model, Cmd Msg )
+init apiUrl currentPath =
+    ( { links = Loading
       , navOpen = False
       , mobileSearchOpen = False
+      , path = currentPath
       }
     , Http.get
-        { url = joinUrl url "/api/collections/links/records"
+        { url = joinUrl apiUrl "/api/collections/links/records"
         , expect = Http.expectJson GotPaginatedResponse decodePaginatedResponse
         }
     )
@@ -277,7 +273,7 @@ viewNavLinks model =
 viewNavLink : Link -> Model -> Html Msg
 viewNavLink link model =
     li [ class "mb-8 flex items-center justify-end gap-[.875rem]" ]
-        [ viewActiveNavLink (pathFromSession model.session) link
+        [ viewActiveNavLink model.path link
         , div []
             [ viewLink
                 [ class "text-xl align-text-top"
