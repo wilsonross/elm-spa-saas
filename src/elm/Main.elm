@@ -41,14 +41,13 @@ type Model
 
 init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url key =
+    let
+        ( home, _ ) =
+            Home.init (Session.init flags key url.path)
+    in
     changeRouteTo
         url
-        (Home
-            { session =
-                Session.Guest
-                    { key = key, flags = flags, path = url.path }
-            }
-        )
+        (Home home)
 
 
 

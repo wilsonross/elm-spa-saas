@@ -1,4 +1,4 @@
-module Session exposing (Flags, Session(..), apiUrl, joinUrl, navKey, pathFromSession, updateSessionPath)
+module Session exposing (Flags, Session(..), apiUrl, init, joinUrl, navKey, pathFromSession, updateSessionPath)
 
 import Browser.Navigation as Nav
 import Url
@@ -10,6 +10,11 @@ import Url
 
 type Session
     = Guest { key : Nav.Key, flags : Flags, path : String }
+
+
+init : Flags -> Nav.Key -> String -> Session
+init flags key path =
+    Guest { key = key, flags = flags, path = path }
 
 
 
