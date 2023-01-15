@@ -1,4 +1,4 @@
-module Header exposing (..)
+module Header exposing (Model, Msg, init, update, view)
 
 import Compare exposing (Comparator)
 import Html exposing (Html, button, div, form, img, input, li, text, ul)
@@ -105,130 +105,18 @@ paginatedResponseToLinks response =
 
 view : Model -> Html Msg
 view model =
-    viewHeader
-        (viewNav model)
-        (viewOverlay model)
-        viewNavButton
-        (viewMobileSearch model)
-
-
-viewNavLinks : Model -> Html msg
-viewNavLinks model =
-    let
-        status =
-            model.links
-    in
-    case status of
-        Failure ->
-            div []
-                [ text "Failed to load links" ]
-
-        Loading ->
-            div []
-                [ text "Fetching links" ]
-
-        Success paginatedResponse ->
-            let
-                sortedLinks =
-                    sortLinks (paginatedResponseToLinks paginatedResponse)
-            in
-            ul []
-                (List.map
-                    (\link ->
-                        viewNavLink link model
-                    )
-                    sortedLinks
-                )
-
-
-viewNavLink : Link -> Model -> Html msg
-viewNavLink link model =
-    li [ class "mb-8 flex items-center justify-end gap-[.875rem]" ]
-        [ viewActiveNavLink (pathFromSession model.session) link
-        , div []
-            [ viewLink
-                [ class "text-xl align-text-top"
-                ]
-                link.url
-                link.title
-            ]
-        ]
-
-
-viewNavButton : Html Msg
-viewNavButton =
-    viewButtonImage
-        [ class "block w-6 h-6"
-        ]
-        NavToggle
-        "/static/img/menu.svg"
-
-
-viewNavCloseButton : Html Msg
-viewNavCloseButton =
-    viewButtonImage
-        [ class "block w-6 h-6 ml-auto mb-32"
-        ]
-        NavToggle
-        "/static/img/close.svg"
-
-
-viewNav : Model -> Html Msg
-viewNav model =
-    let
-        navClass =
-            if not model.navOpen then
-                " translate-x-full"
-
-            else
-                ""
-    in
     div
         [ class <|
-            "fixed top-0 right-0 bottom-0 max-w-[21.25rem] duration-500"
-                ++ " transition-transform bg-white px-[3.125rem] py-7 w-full"
-                ++ navClass
+            "flex h-20 mx-auto px-9 lg:px-5 items-center max-w-[76.5rem]"
+                ++ " w-full gap-9"
         ]
-        [ viewNavCloseButton
-        , viewNavLinks model
-        ]
-
-
-viewOverlay : Model -> Html Msg
-viewOverlay model =
-    let
-        overlayClass =
-            if not model.navOpen then
-                " opacity-0 pointer-events-none"
-
-            else
-                " opacity-[.14]"
-    in
-    div
-        [ class <|
-            "fixed inset-0 bg-black transition-opacity duration-500"
-                ++ overlayClass
-        , onClick NavToggle
-        ]
-        []
-
-
-viewActiveNavLink : String -> Link -> Html msg
-viewActiveNavLink path link =
-    let
-        circle =
-            if path == link.url then
-                img
-                    [ src "/static/img/circle.svg"
-                    , class "w-full h-full block shrink-0"
-                    ]
-                    []
-
-            else
-                text ""
-    in
-    div [ class "w-2 h-2" ]
-        [ circle
+        [ viewLogo
+        , viewDesktopSearch
+        , viewMobileSearch model
+        , viewAuthLinks
+        , viewNavButton
+        , viewOverlay model
+        , viewNav model
         ]
 
 
@@ -267,24 +155,7 @@ viewMobileSearch model =
         ]
 
 
-viewHeader : Html msg -> Html msg -> Html msg -> Html msg -> Html msg
-viewHeader nav overlay navButton mobileSearch =
-    div
-        [ class <|
-            "flex h-20 mx-auto px-9 lg:px-5 items-center max-w-[76.5rem]"
-                ++ " w-full gap-9"
-        ]
-        [ viewLogo
-        , viewDesktopSearch
-        , mobileSearch
-        , viewAuthLinks
-        , navButton
-        , overlay
-        , nav
-        ]
-
-
-viewDesktopSearch : Html msg
+viewDesktopSearch : Html Msg
 viewDesktopSearch =
     form
         [ class <|
@@ -304,7 +175,7 @@ viewDesktopSearch =
         ]
 
 
-viewAuthLinks : Html msg
+viewAuthLinks : Html Msg
 viewAuthLinks =
     div [ class "flex gap-9" ]
         [ viewLinkImage [ class "w-[41px] h-[18px]" ]
@@ -313,6 +184,126 @@ viewAuthLinks =
         , viewLinkImage [ class "w-[61px] h-[18px]" ]
             "/register"
             "/static/img/register.svg"
+        ]
+
+
+viewNavButton : Html Msg
+viewNavButton =
+    viewButtonImage
+        [ class "block w-6 h-6"
+        ]
+        NavToggle
+        "/static/img/menu.svg"
+
+
+viewOverlay : Model -> Html Msg
+viewOverlay model =
+    let
+        overlayClass =
+            if not model.navOpen then
+                " opacity-0 pointer-events-none"
+
+            else
+                " opacity-[.14]"
+    in
+    div
+        [ class <|
+            "fixed inset-0 bg-black transition-opacity duration-500"
+                ++ overlayClass
+        , onClick NavToggle
+        ]
+        []
+
+
+viewNav : Model -> Html Msg
+viewNav model =
+    let
+        navClass =
+            if not model.navOpen then
+                " translate-x-full"
+
+            else
+                ""
+    in
+    div
+        [ class <|
+            "fixed top-0 right-0 bottom-0 max-w-[21.25rem] duration-500"
+                ++ " transition-transform bg-white px-[3.125rem] py-7 w-full"
+                ++ navClass
+        ]
+        [ viewNavCloseButton
+        , viewNavLinks model
+        ]
+
+
+viewNavCloseButton : Html Msg
+viewNavCloseButton =
+    viewButtonImage
+        [ class "block w-6 h-6 ml-auto mb-32"
+        ]
+        NavToggle
+        "/static/img/close.svg"
+
+
+viewNavLinks : Model -> Html Msg
+viewNavLinks model =
+    let
+        status =
+            model.links
+    in
+    case status of
+        Failure ->
+            div []
+                [ text "Failed to load links" ]
+
+        Loading ->
+            div []
+                [ text "Fetching links" ]
+
+        Success paginatedResponse ->
+            let
+                sortedLinks =
+                    sortLinks (paginatedResponseToLinks paginatedResponse)
+            in
+            ul []
+                (List.map
+                    (\link ->
+                        viewNavLink link model
+                    )
+                    sortedLinks
+                )
+
+
+viewNavLink : Link -> Model -> Html Msg
+viewNavLink link model =
+    li [ class "mb-8 flex items-center justify-end gap-[.875rem]" ]
+        [ viewActiveNavLink (pathFromSession model.session) link
+        , div []
+            [ viewLink
+                [ class "text-xl align-text-top"
+                ]
+                link.url
+                link.title
+            ]
+        ]
+
+
+viewActiveNavLink : String -> Link -> Html Msg
+viewActiveNavLink path link =
+    let
+        circle =
+            if path == link.url then
+                img
+                    [ src "/static/img/circle.svg"
+                    , class "w-full h-full block shrink-0"
+                    ]
+                    []
+
+            else
+                text ""
+    in
+    div [ class "w-2 h-2" ]
+        [ circle
         ]
 
 
