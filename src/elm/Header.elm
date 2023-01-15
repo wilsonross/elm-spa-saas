@@ -236,7 +236,7 @@ viewNav model =
 viewNavCloseButton : Html Msg
 viewNavCloseButton =
     viewButtonImage
-        [ class "block w-6 h-6 ml-auto mb-32"
+        [ class "block w-6 h-6 ml-auto"
         ]
         NavToggle
         "/static/img/close.svg"
@@ -250,11 +250,11 @@ viewNavLinks model =
     in
     case status of
         Failure ->
-            div []
+            div [ class "h-full flex items-center justify-center text-grey-2" ]
                 [ text "Failed to load links" ]
 
         Loading ->
-            div []
+            div [ class "h-full flex items-center justify-center text-grey-2" ]
                 [ text "Fetching links" ]
 
         Success paginatedResponse ->
@@ -262,7 +262,7 @@ viewNavLinks model =
                 sortedLinks =
                     sortLinks (paginatedResponseToLinks paginatedResponse)
             in
-            ul []
+            ul [ class "mt-32" ]
                 (List.map
                     (\link ->
                         viewNavLink link model
