@@ -47,9 +47,6 @@ init flags url key =
             { session =
                 Session.Guest
                     { key = key, flags = flags, path = url.path }
-            , links = Home.Loading
-            , navOpen = False
-            , mobileSearchOpen = False
             }
         )
 
