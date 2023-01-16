@@ -40,7 +40,12 @@ module.exports = (env) => {
           test: /\.(sa|sc|c)ss$/i,
           use: [
             "style-loader",
-            "css-loader",
+            {
+              loader: "css-loader",
+              options: {
+                url: false,
+              },
+            },
             {
               loader: "postcss-loader",
               options: {
