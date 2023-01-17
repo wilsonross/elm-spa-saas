@@ -5,7 +5,7 @@ import Html exposing (Html, div, h1, img, p, span, text)
 import Html.Attributes exposing (class, src)
 import Page exposing (viewComponent)
 import Session exposing (Session, apiUrl, pathFromSession)
-import View exposing (viewLink)
+import View exposing (Link, viewLink)
 
 
 
@@ -47,7 +47,10 @@ view model =
                         ++ " lg:h-[calc(100vh_-_var(--header-height))] mx-auto"
                         ++ " flex-col lg:flex-row pt-5 lg:pt-0"
                 ]
-                [ viewCta
+                [ div
+                    [ class "h-full lg:w-1/2"
+                    ]
+                    [ viewCta, viewCarousel hardcodedLinks ]
                 , viewGraphic
                 ]
             ]
@@ -61,7 +64,11 @@ viewHeader model =
 
 viewCta : Html msg
 viewCta =
-    div [ class "lg:w-1/2 mb-[3.75rem] lg:mb-0" ]
+    div
+        [ class <|
+            "flex flex-col justify-center mb-[3.75rem] md:mb-16 lg:mb-0"
+                ++ " h-[calc(100%_-_var(--home-carousel-height))]"
+        ]
         [ viewTitle, viewDescription, viewButton ]
 
 
@@ -96,7 +103,7 @@ viewButton : Html msg
 viewButton =
     viewLink
         [ class <|
-            "h-[3.375rem] rounded-md bg-black flex sm:inline-flex text-white"
+            "h-[3.375rem] rounded-md bg-black flex sm:w-fit text-white"
                 ++ " justify-center items-center px-[1.125rem] font-semibold"
                 ++ " text-lg leading-[1.625rem]"
         ]
@@ -104,11 +111,32 @@ viewButton =
         "Lets Talk Buisness"
 
 
+viewCarousel : List Link -> Html msg
+viewCarousel links =
+    div
+        [ class <|
+            "hidden md:flex gap-3 items-center lg:h-20 mb-[3.75rem] lg:mb-0"
+        ]
+        (List.map (\link -> viewCarouselLink link) links)
+
+
+viewCarouselLink : Link -> Html msg
+viewCarouselLink link =
+    viewLink
+        [ class <|
+            "bg-grey-1 rounded-full px-[0.875rem] capitalize hover:bg-turq"
+                ++ " leading-[2.625rem] hover:text-white transition-colors"
+                ++ " duration-200 ease-in"
+        ]
+        link.url
+        link.title
+
+
 viewGraphic : Html msg
 viewGraphic =
     img
         [ src "/static/img/graphic.svg"
-        , class "lg:w-1/2 mb-[3.75rem] lg:mb-0"
+        , class "lg:w-1/2 mb-[3.75rem] lg:mb-16"
         ]
         []
 
@@ -134,3 +162,32 @@ updateWith model toMsg ( subModel, subCmd ) =
     ( { model | header = subModel }
     , Cmd.map toMsg subCmd
     )
+
+
+
+-- HELPERS
+
+
+hardcodedLinks : List Link
+hardcodedLinks =
+    [ { url = "/home"
+      , title = "Home"
+      , sortOrder = 0
+      }
+    , { url = "/how-it-works"
+      , title = "How It Works"
+      , sortOrder = 0
+      }
+    , { url = "/testimonials"
+      , title = "Testionials"
+      , sortOrder = 0
+      }
+    , { url = "/contact"
+      , title = "Contact"
+      , sortOrder = 0
+      }
+    , { url = "/pricing"
+      , title = "Pricing"
+      , sortOrder = 0
+      }
+    ]

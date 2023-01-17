@@ -4,6 +4,7 @@
 
 :root {
   --header-height: 5rem;
+  --home-carousel-height: 5rem;
 }
 
 @font-face {
