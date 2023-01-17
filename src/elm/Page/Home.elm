@@ -1,8 +1,8 @@
 module Page.Home exposing (Model, Msg, init, update, view)
 
 import Header
-import Html exposing (Html, div, h1, p, span, text)
-import Html.Attributes exposing (class)
+import Html exposing (Html, div, h1, img, p, span, text)
+import Html.Attributes exposing (class, src)
 import Page exposing (viewComponent)
 import Session exposing (Session, apiUrl, pathFromSession)
 import View exposing (viewLink)
@@ -43,10 +43,13 @@ view model =
             [ viewHeader model
             , div
                 [ class <|
-                    "flex px-9 lg:px-5 max-w-[76.5rem] w-full items-center"
-                        ++ " h-[calc(100vh_-_var(--header-height))] mx-auto"
+                    "flex px-12 lg:px-5 max-w-[76.5rem] w-full lg:items-center"
+                        ++ " lg:h-[calc(100vh_-_var(--header-height))] mx-auto"
+                        ++ " flex-col lg:flex-row pt-5 lg:pt-0"
                 ]
-                [ viewCta ]
+                [ viewCta
+                , viewGraphic
+                ]
             ]
     }
 
@@ -58,7 +61,7 @@ viewHeader model =
 
 viewCta : Html msg
 viewCta =
-    div []
+    div [ class "lg:w-1/2 mb-[3.75rem] lg:mb-0" ]
         [ viewTitle, viewDescription, viewButton ]
 
 
@@ -78,7 +81,11 @@ viewTitle =
 
 viewDescription : Html msg
 viewDescription =
-    p [ class "text-base sm:text-xl font-medium max-w-[25rem] mb-5 sm:mb-10" ]
+    p
+        [ class <|
+            "text-base sm:text-xl font-medium mb-5 sm:mb-10"
+                ++ " lg:max-w-[25rem] "
+        ]
         [ text <|
             "Select a design or upload your own, send mail at the click of a"
                 ++ " button or code 💅"
@@ -95,6 +102,15 @@ viewButton =
         ]
         "/about"
         "Lets Talk Buisness"
+
+
+viewGraphic : Html msg
+viewGraphic =
+    img
+        [ src "/static/img/graphic.svg"
+        , class "lg:w-1/2 mb-[3.75rem] lg:mb-0"
+        ]
+        []
 
 
 

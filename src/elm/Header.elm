@@ -103,7 +103,7 @@ view : Model -> Html Msg
 view model =
     div
         [ class <|
-            "flex h-[var(--header-height)] mx-auto px-9 lg:px-5 items-center"
+            "flex h-[var(--header-height)] mx-auto px-12 lg:px-5 items-center"
                 ++ " w-full gap-6 sm:gap-9 max-w-[76.5rem]"
         ]
         [ viewLogo
