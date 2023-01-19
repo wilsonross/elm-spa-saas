@@ -115,21 +115,30 @@ viewCarousel : List Link -> Html msg
 viewCarousel links =
     div
         [ class <|
-            "hidden md:flex gap-3 items-center lg:h-20 mb-[3.75rem] lg:mb-0"
+            "hidden lg:flex mb-[3.75rem] lg:mb-0 overflow-hidden"
+                ++ " psuedo-fade-r psuedo-fade-l items-center mr-10"
         ]
-        (List.map (\link -> viewCarouselLink link) links)
+        [ div
+            [ class <|
+                "flex items-center animate-carousel hover:pause no-wrap"
+                    ++ " will-change-transform"
+            ]
+            (List.map (\link -> viewCarouselLink link) links)
+        ]
 
 
 viewCarouselLink : Link -> Html msg
 viewCarouselLink link =
-    viewLink
-        [ class <|
-            "bg-grey-1 rounded-full px-[0.875rem] capitalize hover:bg-turq"
-                ++ " leading-[2.625rem] hover:text-white transition-colors"
-                ++ " duration-200 ease-in"
+    div [ class "px-[0.375rem]" ]
+        [ viewLink
+            [ class <|
+                "bg-grey-1 rounded-full px-[0.875rem] capitalize hover:bg-turq"
+                    ++ " leading-[2.625rem] hover:text-white transition-colors"
+                    ++ " duration-200 ease-in block"
+            ]
+            link.url
+            link.title
         ]
-        link.url
-        link.title
 
 
 viewGraphic : Html msg
@@ -170,16 +179,12 @@ updateWith model toMsg ( subModel, subCmd ) =
 
 hardcodedLinks : List Link
 hardcodedLinks =
-    [ { url = "/home"
-      , title = "Home"
-      , sortOrder = 0
-      }
-    , { url = "/how-it-works"
-      , title = "How It Works"
+    [ { url = "/about"
+      , title = "About"
       , sortOrder = 0
       }
     , { url = "/testimonials"
-      , title = "Testionials"
+      , title = "Testimonials"
       , sortOrder = 0
       }
     , { url = "/contact"
@@ -188,6 +193,38 @@ hardcodedLinks =
       }
     , { url = "/pricing"
       , title = "Pricing"
+      , sortOrder = 0
+      }
+    , { url = "/account"
+      , title = "Account"
+      , sortOrder = 0
+      }
+    , { url = "/testing"
+      , title = "Testing"
+      , sortOrder = 0
+      }
+    , { url = "/about"
+      , title = "About"
+      , sortOrder = 0
+      }
+    , { url = "/testimonials"
+      , title = "Testimonials"
+      , sortOrder = 0
+      }
+    , { url = "/contact"
+      , title = "Contact"
+      , sortOrder = 0
+      }
+    , { url = "/pricing"
+      , title = "Pricing"
+      , sortOrder = 0
+      }
+    , { url = "/account"
+      , title = "Account"
+      , sortOrder = 0
+      }
+    , { url = "/testing"
+      , title = "Testing"
       , sortOrder = 0
       }
     ]

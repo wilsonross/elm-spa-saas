@@ -52,6 +52,66 @@ body {
 @media screen and (min-width: 1024px) {
   body {
     background-size: cover;
-	background-position: unset;
+    background-position: unset;
+  }
+}
+
+@layer utilities {
+  .pause {
+    -webkit-animation-play-state: paused;
+    -moz-animation-play-state: paused;
+    -o-animation-play-state: paused;
+    animation-play-state: paused;
+  }
+}
+
+@layer components {
+  .psuedo-fade-r,
+  .psuedo-fade-l {
+    @apply relative;
+  }
+
+  .psuedo-fade-r:after {
+    @apply content-[""] absolute top-0 bottom-0 right-0 w-16 z-10 pointer-events-none bg-white;
+    right: 0;
+    background: -webkit-gradient(
+      linear,
+      left top,
+      right top,
+      from(rgba(255, 255, 255, 0)),
+      to(rgba(247, 248, 250, 1))
+    );
+    background: -o-linear-gradient(
+      left,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(247, 248, 250, 1) 100%
+    );
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(247, 248, 250, 1) 100%
+    );
+  }
+
+  .psuedo-fade-l:before {
+    @apply content-[""] absolute top-0 bottom-0 right-0 w-16 z-10 pointer-events-none bg-white;
+    left: 0;
+    background: -webkit-gradient(
+      linear,
+      left top,
+      right top,
+      from(rgba(255, 255, 255, 1)),
+      to(rgba(255, 255, 255, 0))
+    );
+    background: -o-linear-gradient(
+      left,
+      rgba(255, 255, 255, 1) 0%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 1) 0%,
+      rgba(255, 255, 255, 0) 100%
+    );
   }
 }
