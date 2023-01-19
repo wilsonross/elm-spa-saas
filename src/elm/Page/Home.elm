@@ -1,6 +1,6 @@
 module Page.Home exposing (Model, Msg, init, update, view)
 
-import Header
+import Header exposing (PaginatedResponse, Status(..))
 import Html exposing (Html, div, h1, img, p, span, text)
 import Html.Attributes exposing (class, src)
 import Page exposing (viewComponent)
@@ -50,7 +50,7 @@ view model =
                 [ div
                     [ class "h-full lg:w-1/2"
                     ]
-                    [ viewCta, viewCarousel hardcodedLinks ]
+                    [ viewCta, viewCarouselLoader model.header.links ]
                 , viewGraphic
                 ]
             ]
@@ -111,6 +111,19 @@ viewButton =
         "Lets Talk Buisness"
 
 
+viewCarouselLoader : Status -> Html msg
+viewCarouselLoader status =
+    case status of
+        Failure ->
+            text ""
+
+        Loading ->
+            text ""
+
+        Success paginatedResponse ->
+            viewCarousel (formatLinks paginatedResponse)
+
+
 viewCarousel : List Link -> Html msg
 viewCarousel links =
     div
@@ -134,7 +147,7 @@ viewCarouselLink link =
             [ class <|
                 "bg-grey-1 rounded-full px-[0.875rem] capitalize hover:bg-turq"
                     ++ " leading-[2.625rem] hover:text-white transition-colors"
-                    ++ " duration-200 ease-in block"
+                    ++ " duration-200 ease-in block whitespace-nowrap"
             ]
             link.url
             link.title
@@ -145,7 +158,9 @@ viewGraphic : Html msg
 viewGraphic =
     img
         [ src "/static/img/graphic.svg"
-        , class "lg:w-1/2 mb-[3.75rem] lg:mb-16"
+        , class <|
+            "lg:w-1/2 mb-[3.75rem] lg:mb-16 max-w-xl lg:max-w-xl self-end"
+                ++ " lg:self-center"
         ]
         []
 
@@ -177,54 +192,19 @@ updateWith model toMsg ( subModel, subCmd ) =
 -- HELPERS
 
 
-hardcodedLinks : List Link
-hardcodedLinks =
-    [ { url = "/about"
-      , title = "About"
-      , sortOrder = 0
-      }
-    , { url = "/testimonials"
-      , title = "Testimonials"
-      , sortOrder = 0
-      }
-    , { url = "/contact"
-      , title = "Contact"
-      , sortOrder = 0
-      }
-    , { url = "/pricing"
-      , title = "Pricing"
-      , sortOrder = 0
-      }
-    , { url = "/account"
-      , title = "Account"
-      , sortOrder = 0
-      }
-    , { url = "/testing"
-      , title = "Testing"
-      , sortOrder = 0
-      }
-    , { url = "/about"
-      , title = "About"
-      , sortOrder = 0
-      }
-    , { url = "/testimonials"
-      , title = "Testimonials"
-      , sortOrder = 0
-      }
-    , { url = "/contact"
-      , title = "Contact"
-      , sortOrder = 0
-      }
-    , { url = "/pricing"
-      , title = "Pricing"
-      , sortOrder = 0
-      }
-    , { url = "/account"
-      , title = "Account"
-      , sortOrder = 0
-      }
-    , { url = "/testing"
-      , title = "Testing"
-      , sortOrder = 0
-      }
-    ]
+doubleLinks : List Link -> List Link
+doubleLinks links =
+    links ++ links
+
+
+removeIndexLink : List Link -> List Link
+removeIndexLink links =
+    List.filter (\link -> link.url /= "/") links
+
+
+formatLinks : PaginatedResponse -> List Link
+formatLinks paginatedResponse =
+    Header.paginatedResponseToLinks paginatedResponse
+        |> removeIndexLink
+        |> Header.sortLinks
+        |> doubleLinks

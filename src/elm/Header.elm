@@ -1,4 +1,4 @@
-module Header exposing (Model, Msg, init, update, view)
+module Header exposing (Model, Msg, PaginatedResponse, Status(..), init, paginatedResponseToLinks, sortLinks, update, view)
 
 import Compare exposing (Comparator)
 import Html exposing (Html, button, div, form, img, input, li, text, ul)
@@ -204,7 +204,7 @@ viewOverlay model =
     in
     div
         [ class <|
-            "fixed inset-0 bg-black transition-opacity duration-500"
+            "fixed inset-0 bg-black transition-opacity duration-500 z-20"
                 ++ overlayClass
         , onClick NavToggle
         ]
@@ -225,7 +225,7 @@ viewNav model =
         [ class <|
             "fixed top-0 right-0 bottom-0 max-w-[21.25rem] duration-500"
                 ++ " transition-transform bg-white px-[3.125rem] py-7 w-full"
-                ++ " bg-navblur bg-no-repeat bg-cover bg-right-bottom"
+                ++ " bg-navblur bg-no-repeat bg-cover bg-right-bottom z-30"
                 ++ navClass
         ]
         [ viewNavCloseButton

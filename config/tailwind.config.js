@@ -18,7 +18,7 @@ module.exports = {
         },
       },
       animation: {
-        carousel: "carousel 10s linear infinite",
+        carousel: "carousel 17s linear infinite",
       },
       keyframes: {
         carousel: {
