@@ -15,6 +15,7 @@ module.exports = {
           0: "#f2f3f6",
           1: "rgba(209, 216, 224, 0.3)",
           2: "#A5B1C2",
+          3: "rgba(119, 140, 163, 0.3)",
         },
       },
       animation: {
@@ -28,6 +29,7 @@ module.exports = {
       },
       boxShadow: {
         modal: "0 5px 30px -5px rgba(0, 0, 0, 0.15)",
+        portal: "0 20px 70px -4px rgba(209, 216, 224, 0.1)",
       },
     },
   },

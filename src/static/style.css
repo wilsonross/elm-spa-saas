@@ -63,6 +63,14 @@ body {
     -o-animation-play-state: paused;
     animation-play-state: paused;
   }
+
+  input[type="checkbox"]:checked ~ img.checkbox-img:nth-of-type(1) {
+    @apply opacity-0;
+  }
+
+  input[type="checkbox"]:checked ~ img.checkbox-img:nth-of-type(2) {
+    @apply opacity-100;
+  }
 }
 
 @layer components {

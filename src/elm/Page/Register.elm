@@ -45,4 +45,4 @@ view _ =
 
 
 type Msg
-    = Msg
+    = NoOp

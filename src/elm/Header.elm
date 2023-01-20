@@ -106,7 +106,7 @@ view model =
             "flex h-[var(--header-height)] mx-auto px-12 lg:px-5 items-center"
                 ++ " w-full gap-6 sm:gap-9 max-w-[76.5rem]"
         ]
-        [ viewLogo
+        [ viewLogo []
         , viewDesktopSearch
         , viewMobileSearch model
         , viewAuthLinks

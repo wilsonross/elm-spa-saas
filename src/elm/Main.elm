@@ -159,7 +159,7 @@ view model =
             Page.viewPage GotHomeMsg (Home.view home)
 
         Login login ->
-            Page.view (Login.view login)
+            Page.viewPage GotLoginMsg (Login.view login)
 
         Register register ->
             Page.view (Register.view register)
