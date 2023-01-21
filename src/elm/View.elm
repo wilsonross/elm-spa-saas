@@ -158,10 +158,10 @@ viewAuthLogo =
     viewLogo [ class "mx-auto mb-[1.875rem]" ]
 
 
-viewTitle : Html msg
-viewTitle =
+viewTitle : String -> Html msg
+viewTitle title =
     h1 [ class "text-sm font-bold mb-[0.563rem]" ]
-        [ text "Log in"
+        [ text title
         ]
 
 

@@ -162,4 +162,4 @@ view model =
             Page.viewPage GotLoginMsg (Login.view login)
 
         Register register ->
-            Page.view (Register.view register)
+            Page.viewPage GotRegisterMsg (Register.view register)

@@ -55,13 +55,18 @@ viewForm =
                 ++ " pb-[4.059rem] sm:px-10"
         ]
         [ viewAuthLogo
-        , viewTitle
+        , viewLoginTitle
         , viewEmailInput
         , viewPasswordInput
         , viewAdditional
         , viewLoginButton
         , viewAlternative
         ]
+
+
+viewLoginTitle : Html msg
+viewLoginTitle =
+    viewTitle "Log in"
 
 
 viewAdditional : Html msg
