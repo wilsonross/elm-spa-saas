@@ -1,4 +1,14 @@
-module Header exposing (Model, Msg, PaginatedResponse, Status(..), init, paginatedResponseToLinks, sortLinks, update, view)
+module Header exposing
+    ( Model
+    , Msg
+    , PaginatedResponse
+    , Status(..)
+    , init
+    , paginatedResponseToLinks
+    , sortLinks
+    , update
+    , view
+    )
 
 import Compare exposing (Comparator)
 import Html exposing (Html, button, div, form, img, input, li, text, ul)

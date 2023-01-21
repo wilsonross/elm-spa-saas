@@ -1,4 +1,17 @@
-module View exposing (..)
+module View exposing
+    ( Link
+    , viewAuthLogo
+    , viewButtonImage
+    , viewCheckbox
+    , viewEmailInput
+    , viewFooter
+    , viewInput
+    , viewLink
+    , viewLinkImage
+    , viewLogo
+    , viewPasswordInput
+    , viewTitle
+    )
 
 import Html exposing (Attribute, Html, a, button, div, h1, img, input, p, text)
 import Html.Attributes exposing (class, href, name, src, type_)
@@ -83,37 +96,57 @@ viewInput attr placeholder =
         []
 
 
-viewCheckbox : List (Attribute msg) -> Bool -> String -> Html msg
-viewCheckbox attr checked label =
+viewCheckbox : List (Attribute msg) -> Bool -> String -> String -> Html msg
+viewCheckbox attr checked name label =
     div (class "flex items-center gap-2" :: attr)
         [ div
             [ class "w-[1.125rem] h-[1.125rem] relative"
             ]
-            [ input
-                [ class "block w-full h-full opacity-0"
-                , type_ "checkbox"
-                , Html.Attributes.checked checked
-                ]
-                []
-            , img
-                [ src "/static/img/unchecked.svg"
-                , class <|
-                    "block absolute inset-0 checkbox-img pointer-events-none"
-                ]
-                []
-            , img
-                [ src "/static/img/checked.svg"
-                , class <|
-                    "block absolute inset-0 opacity-0 checkbox-img"
-                        ++ " pointer-events-none"
-                ]
-                []
+            [ viewCheckboxHidden checked
+            , viewCheckboxImageUnchecked
+            , viewCheckboxImageChecked
             ]
-        , Html.label
-            [ class "text-xs leading-[1.125rem] capitalize"
-            ]
-            [ text label ]
+        , viewLabel name label
         ]
+
+
+viewCheckboxHidden : Bool -> Html msg
+viewCheckboxHidden checked =
+    input
+        [ class "block w-full h-full opacity-0"
+        , type_ "checkbox"
+        , Html.Attributes.checked checked
+        ]
+        []
+
+
+viewCheckboxImageUnchecked : Html msg
+viewCheckboxImageUnchecked =
+    img
+        [ src "/static/img/unchecked.svg"
+        , class <|
+            "block absolute inset-0 checkbox-img pointer-events-none"
+        ]
+        []
+
+
+viewCheckboxImageChecked : Html msg
+viewCheckboxImageChecked =
+    img
+        [ src "/static/img/checked.svg"
+        , class <|
+            "block absolute inset-0 opacity-0 checkbox-img pointer-events-none"
+        ]
+        []
+
+
+viewLabel : String -> String -> Html msg
+viewLabel name label =
+    Html.label
+        [ class "text-xs leading-[1.125rem] capitalize"
+        , Html.Attributes.name name
+        ]
+        [ text label ]
 
 
 

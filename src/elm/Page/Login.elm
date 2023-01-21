@@ -3,7 +3,16 @@ module Page.Login exposing (Model, Msg, init, view)
 import Html exposing (Html, div, form, span, text)
 import Html.Attributes exposing (class)
 import Session exposing (Session)
-import View exposing (viewAuthLogo, viewButtonImage, viewCheckbox, viewEmailInput, viewLink, viewPasswordInput, viewTitle)
+import View
+    exposing
+        ( viewAuthLogo
+        , viewButtonImage
+        , viewCheckbox
+        , viewEmailInput
+        , viewLink
+        , viewPasswordInput
+        , viewTitle
+        )
 
 
 
@@ -58,7 +67,7 @@ viewForm =
 viewAdditional : Html msg
 viewAdditional =
     div [ class "flex items-center justify-between mb-6" ]
-        [ viewCheckbox [] True "Remember Me"
+        [ viewCheckbox [] True "remember" "Remember Me"
         , viewLink [ class "text-xs leading-[1.125rem]" ]
             "/forgot-password"
             "Forgot Password?"
