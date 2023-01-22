@@ -2,6 +2,8 @@ module Page.Register exposing (Model, Msg, init, view)
 
 import Html exposing (Html, div, form, span, text)
 import Html.Attributes exposing (class)
+import Json.Decode as Decode exposing (Decoder, bool, int, string)
+import Json.Decode.Pipeline exposing (optional, required)
 import Session exposing (Session)
 import View
     exposing
@@ -106,3 +108,85 @@ viewAlternative =
 
 type Msg
     = NoOp
+
+
+
+-- JSON
+
+
+type alias SuccessfulResponse =
+    { id : String
+    , collectionId : String
+    , collectionName : String
+    , created : String
+    , updated : String
+    , username : String
+    , verified : Bool
+    , emailVisibility : Bool
+    , email : String
+    , firstName : String
+    , lastName : String
+    }
+
+
+decodeSuccessfulResponse : Decoder SuccessfulResponse
+decodeSuccessfulResponse =
+    Decode.succeed SuccessfulResponse
+        |> required "id" string
+        |> required "collectionId" string
+        |> required "collectionName" string
+        |> required "created" string
+        |> required "updated" string
+        |> required "username" string
+        |> required "verified" bool
+        |> required "emailVisibility" bool
+        |> required "email" string
+        |> required "firstName" string
+        |> required "lastName" string
+
+
+type alias ErrorResponse =
+    { code : Int
+    , message : String
+    , data : ErrorData
+    }
+
+
+type alias ErrorData =
+    { email : Maybe ErrorMessage
+    , password : Maybe ErrorMessage
+    , passwordConfirm : Maybe ErrorMessage
+    , firstName : Maybe ErrorMessage
+    , lastName : Maybe ErrorMessage
+    }
+
+
+type alias ErrorMessage =
+    { code : String
+    , message : String
+    }
+
+
+decodeErrorResponse : Decoder ErrorResponse
+decodeErrorResponse =
+    Decode.succeed ErrorResponse
+        |> required "code" int
+        |> required "message" string
+        |> required "data" decodeErrorData
+
+
+decodeErrorData : Decoder ErrorData
+decodeErrorData =
+    Decode.succeed ErrorData
+        |> optional "email" (Decode.map Just decodeErrorMessage) Nothing
+        |> optional "password" (Decode.map Just decodeErrorMessage) Nothing
+        |> optional "passwordConfirm" (Decode.map Just decodeErrorMessage) Nothing
+        |> optional "firstName" (Decode.map Just decodeErrorMessage) Nothing
+        |> optional "lastName" (Decode.map Just decodeErrorMessage) Nothing
+
+
+decodeErrorMessage : Decoder ErrorMessage
+decodeErrorMessage =
+    Decode.succeed ErrorMessage
+        |> required "code" string
+        |> required "message" string
