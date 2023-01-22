@@ -89,8 +89,9 @@ update msg model =
         ( GotLoginMsg _, Login login ) ->
             ( Login login, Cmd.none )
 
-        ( GotRegisterMsg _, Register register ) ->
-            ( Register register, Cmd.none )
+        ( GotRegisterMsg subMsg, Register register ) ->
+            Register.update subMsg register
+                |> updateWith Register GotRegisterMsg
 
         ( _, _ ) ->
             ( model, Cmd.none )

@@ -1,10 +1,12 @@
-module Page.Register exposing (Model, Msg, init, view)
+module Page.Register exposing (Model, Msg, init, update, view)
 
 import Html exposing (Html, div, form, span, text)
 import Html.Attributes exposing (class)
+import Http
 import Json.Decode as Decode exposing (Decoder, bool, int, string)
 import Json.Decode.Pipeline exposing (optional, required)
-import Session exposing (Session)
+import Json.Encode as Encode
+import Session exposing (Session, apiUrl, joinUrl)
 import View
     exposing
         ( viewAuthLogo
@@ -24,12 +26,32 @@ import View
 
 type alias Model =
     { session : Session
+    , response : Status
+    , email : String
+    , password : String
+    , passwordConfirm : String
+    , firstName : String
+    , lastName : String
     }
+
+
+type Status
+    = None
+    | Failure
+    | Loading
+    | Success SuccessfulResponse
 
 
 init : Session -> ( Model, Cmd Msg )
 init session =
-    ( { session = session }
+    ( { session = session
+      , response = None
+      , email = ""
+      , password = ""
+      , passwordConfirm = ""
+      , firstName = ""
+      , lastName = ""
+      }
     , Cmd.none
     )
 
@@ -58,26 +80,21 @@ viewForm =
                 ++ " pb-[4.059rem] sm:px-10"
         ]
         [ viewAuthLogo
-        , viewRegisterTitle
+        , viewTitle "Sign Up"
         , viewNameInput
-        , viewEmailInput
-        , viewPasswordInput
+        , viewEmailInput EmailChanged
+        , viewPasswordInput PasswordChanged
         , viewAdditional
         , viewLoginButton
         , viewAlternative
         ]
 
 
-viewRegisterTitle : Html msg
-viewRegisterTitle =
-    viewTitle "Sign up"
-
-
-viewNameInput : Html msg
+viewNameInput : Html Msg
 viewNameInput =
     div [ class "flex gap-6 mb-6" ]
-        [ viewInput [] "First name"
-        , viewInput [] "Last name"
+        [ viewInput [] "First name" FirstNameChanged
+        , viewInput [] "Last name" LastNameChanged
         ]
 
 
@@ -90,7 +107,7 @@ viewAdditional =
 
 viewLoginButton : Html Msg
 viewLoginButton =
-    viewButtonImage [ class "w-full mb-4" ] NoOp "/static/img/signup.svg"
+    viewButtonImage [ class "w-full mb-4" ] Register "/static/img/signup.svg"
 
 
 viewAlternative : Html msg
@@ -107,7 +124,70 @@ viewAlternative =
 
 
 type Msg
-    = NoOp
+    = GotRegisterResponse (Result Http.Error SuccessfulResponse)
+    | Register
+    | EmailChanged String
+    | PasswordChanged String
+    | FirstNameChanged String
+    | LastNameChanged String
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        GotRegisterResponse result ->
+            case result of
+                Ok res ->
+                    ( { model | response = Success res }, Cmd.none )
+
+                Err error ->
+                    ( { model | response = Failure }, Cmd.none )
+
+        Register ->
+            ( { model | response = Loading }
+            , register model
+            )
+
+        EmailChanged email ->
+            ( { model | email = email }, Cmd.none )
+
+        PasswordChanged password ->
+            ( { model
+                | password = password
+                , passwordConfirm = password
+              }
+            , Cmd.none
+            )
+
+        FirstNameChanged firstName ->
+            ( { model | firstName = firstName }, Cmd.none )
+
+        LastNameChanged lastName ->
+            ( { model | lastName = lastName }, Cmd.none )
+
+
+
+-- HELPERS
+
+
+register : Model -> Cmd Msg
+register model =
+    Http.post
+        { url = joinUrl (apiUrl model.session) "/api/collections/users/records"
+        , body = Http.jsonBody (encodeForm model)
+        , expect = Http.expectJson GotRegisterResponse decodeSuccessfulResponse
+        }
+
+
+encodeForm : Model -> Encode.Value
+encodeForm model =
+    Encode.object
+        [ ( "email", Encode.string model.email )
+        , ( "password", Encode.string model.password )
+        , ( "passwordConfirm", Encode.string model.passwordConfirm )
+        , ( "firstName", Encode.string model.firstName )
+        , ( "lastName", Encode.string model.lastName )
+        ]
 
 
 

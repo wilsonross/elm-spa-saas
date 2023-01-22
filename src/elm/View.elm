@@ -15,7 +15,7 @@ module View exposing
 
 import Html exposing (Attribute, Html, a, button, div, h1, img, input, p, text)
 import Html.Attributes exposing (class, href, name, src, type_)
-import Html.Events exposing (custom)
+import Html.Events exposing (custom, onInput)
 import Json.Decode as Decode
 
 
@@ -82,16 +82,18 @@ viewFooter =
     p [] [ text "Footer" ]
 
 
-viewInput : List (Attribute msg) -> String -> Html msg
-viewInput attr placeholder =
+viewInput : List (Attribute msg) -> String -> (String -> msg) -> Html msg
+viewInput attr placeholder msg =
     input
-        (Html.Attributes.placeholder placeholder
-            :: (class <|
-                    "focus-visible:outline-none block h-10 w-full rounded"
-                        ++ " border border-grey-3 px-[0.93rem]"
-                        ++ " placeholder:text-grey-2 text-sm"
+        (onInput msg
+            :: (Html.Attributes.placeholder placeholder
+                    :: (class <|
+                            "focus-visible:outline-none block h-10 w-full"
+                                ++ " border border-grey-3 px-[0.93rem] rounded"
+                                ++ " placeholder:text-grey-2 text-sm"
+                       )
+                    :: attr
                )
-            :: attr
         )
         []
 
@@ -165,11 +167,14 @@ viewTitle title =
         ]
 
 
-viewEmailInput : Html msg
-viewEmailInput =
-    viewInput [ class "mb-6", type_ "email", name "email" ] "Email"
+viewEmailInput : (String -> msg) -> Html msg
+viewEmailInput msg =
+    viewInput [ class "mb-6", type_ "email", name "email" ] "Email" msg
 
 
-viewPasswordInput : Html msg
-viewPasswordInput =
-    viewInput [ class "mb-6", type_ "password", name "password" ] "Password"
+viewPasswordInput : (String -> msg) -> Html msg
+viewPasswordInput msg =
+    viewInput
+        [ class "mb-6", type_ "password", name "password" ]
+        "Password"
+        msg

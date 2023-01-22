@@ -55,18 +55,13 @@ viewForm =
                 ++ " pb-[4.059rem] sm:px-10"
         ]
         [ viewAuthLogo
-        , viewLoginTitle
-        , viewEmailInput
-        , viewPasswordInput
+        , viewTitle "Log in"
+        , viewEmailInput EmailChanged
+        , viewPasswordInput PasswordChanged
         , viewAdditional
         , viewLoginButton
         , viewAlternative
         ]
-
-
-viewLoginTitle : Html msg
-viewLoginTitle =
-    viewTitle "Log in"
 
 
 viewAdditional : Html msg
@@ -81,7 +76,7 @@ viewAdditional =
 
 viewLoginButton : Html Msg
 viewLoginButton =
-    viewButtonImage [ class "w-full mb-4" ] NoOp "/static/img/signin.svg"
+    viewButtonImage [ class "w-full mb-4" ] Login "/static/img/signin.svg"
 
 
 viewAlternative : Html msg
@@ -98,4 +93,6 @@ viewAlternative =
 
 
 type Msg
-    = NoOp
+    = Login
+    | EmailChanged String
+    | PasswordChanged String
