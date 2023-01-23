@@ -2,7 +2,7 @@ module Page.Register exposing (Model, Msg, init, update, view)
 
 import Html exposing (Html, div, form, span, text)
 import Html.Attributes exposing (class)
-import Http
+import Http exposing (Error, Expect, Metadata, Response)
 import Json.Decode as Decode exposing (Decoder, bool, int, string)
 import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode as Encode
@@ -37,9 +37,17 @@ type alias Model =
 
 type Status
     = None
-    | Failure
+    | Failure ErrorResponse
     | Loading
     | Success SuccessfulResponse
+
+
+type ErrorDetailed
+    = BadUrl String
+    | Timeout
+    | NetworkError
+    | BadStatus Http.Metadata String
+    | BadBody String
 
 
 init : Session -> ( Model, Cmd Msg )
@@ -124,7 +132,7 @@ viewAlternative =
 
 
 type Msg
-    = GotRegisterResponse (Result Http.Error SuccessfulResponse)
+    = GotRegisterResponse (Result ErrorDetailed ( Metadata, String ))
     | Register
     | EmailChanged String
     | PasswordChanged String
@@ -137,11 +145,16 @@ update msg model =
     case msg of
         GotRegisterResponse result ->
             case result of
-                Ok res ->
-                    ( { model | response = Success res }, Cmd.none )
+                Ok ( _, res ) ->
+                    ( { model | response = Success (decodeSuccessString res) }, Cmd.none )
 
-                Err error ->
-                    ( { model | response = Failure }, Cmd.none )
+                Err err ->
+                    case err of
+                        BadStatus _ body ->
+                            ( { model | response = Failure (decodeErrorString body) }, Cmd.none )
+
+                        _ ->
+                            ( model, Cmd.none )
 
         Register ->
             ( { model | response = Loading }
@@ -166,6 +179,54 @@ update msg model =
             ( { model | lastName = lastName }, Cmd.none )
 
 
+decodeSuccessString : String -> SuccessfulResponse
+decodeSuccessString body =
+    let
+        result =
+            Decode.decodeString decodeSuccessfulResponse body
+    in
+    case result of
+        Ok res ->
+            res
+
+        Err _ ->
+            { id = ""
+            , collectionId = ""
+            , collectionName = ""
+            , created = ""
+            , updated = ""
+            , username = ""
+            , verified = False
+            , emailVisibility = False
+            , email = ""
+            , firstName = ""
+            , lastName = ""
+            }
+
+
+decodeErrorString : String -> ErrorResponse
+decodeErrorString body =
+    let
+        result =
+            Decode.decodeString decodeErrorResponse body
+    in
+    case result of
+        Ok res ->
+            res
+
+        Err _ ->
+            { code = 0
+            , message = ""
+            , data =
+                { email = Nothing
+                , password = Nothing
+                , passwordConfirm = Nothing
+                , firstName = Nothing
+                , lastName = Nothing
+                }
+            }
+
+
 
 -- HELPERS
 
@@ -175,7 +236,7 @@ register model =
     Http.post
         { url = joinUrl (apiUrl model.session) "/api/collections/users/records"
         , body = Http.jsonBody (encodeForm model)
-        , expect = Http.expectJson GotRegisterResponse decodeSuccessfulResponse
+        , expect = expectStringDetailed GotRegisterResponse
         }
 
 
@@ -270,3 +331,27 @@ decodeErrorMessage =
     Decode.succeed ErrorMessage
         |> required "code" string
         |> required "message" string
+
+
+expectStringDetailed : (Result ErrorDetailed ( Metadata, String ) -> msg) -> Expect msg
+expectStringDetailed msg =
+    Http.expectStringResponse msg convertResponseString
+
+
+convertResponseString : Response String -> Result ErrorDetailed ( Metadata, String )
+convertResponseString httpResponse =
+    case httpResponse of
+        Http.BadUrl_ url ->
+            Err (BadUrl url)
+
+        Http.Timeout_ ->
+            Err Timeout
+
+        Http.NetworkError_ ->
+            Err NetworkError
+
+        Http.BadStatus_ metadata body ->
+            Err (BadStatus metadata body)
+
+        Http.GoodStatus_ metadata body ->
+            Ok ( metadata, body )
