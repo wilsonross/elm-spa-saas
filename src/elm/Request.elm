@@ -1,6 +1,20 @@
-module Request exposing (ErrorDetailed(..), expectStringDetailed)
+module Request exposing
+    ( ErrorDetailed(..)
+    , ErrorMessage
+    , ErrorResponse
+    , ResponseResult
+    , decodeErrorMessage
+    , decodeErrorResponse
+    , expectStringDetailed
+    )
 
 import Http exposing (Expect, Metadata, Response)
+import Json.Decode as Decode exposing (Decoder, int, string)
+import Json.Decode.Pipeline exposing (required)
+
+
+type alias ResponseResult =
+    Result ErrorDetailed ( Metadata, String )
 
 
 type ErrorDetailed
@@ -10,7 +24,7 @@ type ErrorDetailed
     | BadStatus Http.Metadata String
 
 
-expectStringDetailed : (Result ErrorDetailed ( Metadata, String ) -> msg) -> Expect msg
+expectStringDetailed : (ResponseResult -> msg) -> Expect msg
 expectStringDetailed msg =
     Http.expectStringResponse msg convertResponseString
 
@@ -32,3 +46,35 @@ convertResponseString httpResponse =
 
         Http.GoodStatus_ metadata body ->
             Ok ( metadata, body )
+
+
+
+-- JSON ERROR
+
+
+type alias ErrorResponse errorData =
+    { code : Int
+    , message : String
+    , data : errorData
+    }
+
+
+decodeErrorResponse : Decoder errorData -> Decoder (ErrorResponse errorData)
+decodeErrorResponse decodeErrorData =
+    Decode.succeed ErrorResponse
+        |> required "code" int
+        |> required "message" string
+        |> required "data" decodeErrorData
+
+
+type alias ErrorMessage =
+    { code : String
+    , message : String
+    }
+
+
+decodeErrorMessage : Decoder ErrorMessage
+decodeErrorMessage =
+    Decode.succeed ErrorMessage
+        |> required "code" string
+        |> required "message" string

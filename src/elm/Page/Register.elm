@@ -2,11 +2,17 @@ module Page.Register exposing (Model, Msg, init, update, view)
 
 import Html exposing (Html, div, form, span, text)
 import Html.Attributes exposing (class)
-import Http exposing (Metadata)
-import Json.Decode as Decode exposing (Decoder, bool, int, string)
+import Http
+import Json.Decode as Decode exposing (Decoder, bool, string)
 import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode as Encode
-import Request exposing (ErrorDetailed(..), expectStringDetailed)
+import Request
+    exposing
+        ( ErrorDetailed(..)
+        , ErrorMessage
+        , ErrorResponse
+        , ResponseResult
+        )
 import Session exposing (Session, apiUrl, joinUrl)
 import View
     exposing
@@ -62,7 +68,7 @@ init session =
 
 
 type Msg
-    = GotRegisterResponse (Result ErrorDetailed ( Metadata, String ))
+    = GotRegisterResponse ResponseResult
     | Register
     | EmailChanged String
     | PasswordChanged String
@@ -99,11 +105,13 @@ update msg model =
             ( { model | lastName = lastName }, Cmd.none )
 
 
-handleGotRegisterResponse : Result ErrorDetailed ( Metadata, String ) -> Model -> ( Model, Cmd Msg )
+handleGotRegisterResponse : ResponseResult -> Model -> ( Model, Cmd Msg )
 handleGotRegisterResponse result model =
     case result of
         Ok ( _, res ) ->
-            ( { model | response = Response (decodeJsonString res) }, Cmd.none )
+            ( { model | response = Response (decodeJsonString res) }
+            , Cmd.none
+            )
 
         Err err ->
             handleErrorDetailed err model
@@ -113,7 +121,9 @@ handleErrorDetailed : ErrorDetailed -> Model -> ( Model, Cmd Msg )
 handleErrorDetailed err model =
     case err of
         BadStatus _ res ->
-            ( { model | response = Response (decodeJsonString res) }, Cmd.none )
+            ( { model | response = Response (decodeJsonString res) }
+            , Cmd.none
+            )
 
         _ ->
             ( { model | response = Failure }, Cmd.none )
@@ -191,7 +201,7 @@ register model =
     Http.post
         { url = joinUrl (apiUrl model.session) "/api/collections/users/records"
         , body = Http.jsonBody (encodeForm model)
-        , expect = expectStringDetailed GotRegisterResponse
+        , expect = Request.expectStringDetailed GotRegisterResponse
         }
 
 
@@ -211,7 +221,7 @@ encodeForm model =
 
 
 type JsonResponse
-    = JsonError ErrorResponse
+    = JsonError (ErrorResponse ErrorData)
     | JsonSuccess SuccessfulResponse
     | JsonNone Decode.Error
 
@@ -231,25 +241,12 @@ type alias SuccessfulResponse =
     }
 
 
-type alias ErrorResponse =
-    { code : Int
-    , message : String
-    , data : ErrorData
-    }
-
-
 type alias ErrorData =
     { email : Maybe ErrorMessage
     , password : Maybe ErrorMessage
     , passwordConfirm : Maybe ErrorMessage
     , firstName : Maybe ErrorMessage
     , lastName : Maybe ErrorMessage
-    }
-
-
-type alias ErrorMessage =
-    { code : String
-    , message : String
     }
 
 
@@ -269,29 +266,18 @@ decodeSuccessfulResponse =
         |> required "lastName" string
 
 
-decodeErrorResponse : Decoder ErrorResponse
-decodeErrorResponse =
-    Decode.succeed ErrorResponse
-        |> required "code" int
-        |> required "message" string
-        |> required "data" decodeErrorData
-
-
 decodeErrorData : Decoder ErrorData
 decodeErrorData =
+    let
+        decoder =
+            Request.decodeErrorMessage
+    in
     Decode.succeed ErrorData
-        |> optional "email" (Decode.map Just decodeErrorMessage) Nothing
-        |> optional "password" (Decode.map Just decodeErrorMessage) Nothing
-        |> optional "passwordConfirm" (Decode.map Just decodeErrorMessage) Nothing
-        |> optional "firstName" (Decode.map Just decodeErrorMessage) Nothing
-        |> optional "lastName" (Decode.map Just decodeErrorMessage) Nothing
-
-
-decodeErrorMessage : Decoder ErrorMessage
-decodeErrorMessage =
-    Decode.succeed ErrorMessage
-        |> required "code" string
-        |> required "message" string
+        |> optional "email" (Decode.map Just decoder) Nothing
+        |> optional "password" (Decode.map Just decoder) Nothing
+        |> optional "passwordConfirm" (Decode.map Just decoder) Nothing
+        |> optional "firstName" (Decode.map Just decoder) Nothing
+        |> optional "lastName" (Decode.map Just decoder) Nothing
 
 
 decodeJsonString : String -> JsonResponse
@@ -306,7 +292,11 @@ decodeJsonString jsonString =
 
 decodeJsonErrorString : String -> JsonResponse
 decodeJsonErrorString jsonString =
-    case Decode.decodeString decodeErrorResponse jsonString of
+    let
+        decoder =
+            Request.decodeErrorResponse decodeErrorData
+    in
+    case Decode.decodeString decoder jsonString of
         Ok res ->
             JsonError res
 
