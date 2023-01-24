@@ -2,6 +2,7 @@ module Request exposing
     ( ErrorDetailed(..)
     , ErrorMessage
     , ErrorResponse
+    , JsonResponse(..)
     , ResponseResult
     , decodeErrorMessage
     , decodeErrorResponse
@@ -9,7 +10,7 @@ module Request exposing
     )
 
 import Http exposing (Expect, Metadata, Response)
-import Json.Decode as Decode exposing (Decoder, int, string)
+import Json.Decode as Decode exposing (Decoder, Error, int, string)
 import Json.Decode.Pipeline exposing (required)
 
 
@@ -29,7 +30,7 @@ expectStringDetailed msg =
     Http.expectStringResponse msg convertResponseString
 
 
-convertResponseString : Response String -> Result ErrorDetailed ( Metadata, String )
+convertResponseString : Response String -> ResponseResult
 convertResponseString httpResponse =
     case httpResponse of
         Http.BadUrl_ url ->
@@ -49,7 +50,13 @@ convertResponseString httpResponse =
 
 
 
--- JSON ERROR
+-- JSON
+
+
+type JsonResponse errorData successfulResponse
+    = JsonError (ErrorResponse errorData)
+    | JsonSuccess successfulResponse
+    | JsonNone Error
 
 
 type alias ErrorResponse errorData =

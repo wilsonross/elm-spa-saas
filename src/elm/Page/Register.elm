@@ -11,6 +11,7 @@ import Request
         ( ErrorDetailed(..)
         , ErrorMessage
         , ErrorResponse
+        , JsonResponse(..)
         , ResponseResult
         )
 import Session exposing (Session, apiUrl, joinUrl)
@@ -46,7 +47,7 @@ type Status
     = None
     | Failure
     | Loading
-    | Response JsonResponse
+    | Response RegisterJsonResponse
 
 
 init : Session -> ( Model, Cmd Msg )
@@ -220,10 +221,8 @@ encodeForm model =
 -- JSON
 
 
-type JsonResponse
-    = JsonError (ErrorResponse ErrorData)
-    | JsonSuccess SuccessfulResponse
-    | JsonNone Decode.Error
+type alias RegisterJsonResponse =
+    JsonResponse ErrorData SuccessfulResponse
 
 
 type alias SuccessfulResponse =
@@ -280,7 +279,7 @@ decodeErrorData =
         |> optional "lastName" (Decode.map Just decoder) Nothing
 
 
-decodeJsonString : String -> JsonResponse
+decodeJsonString : String -> RegisterJsonResponse
 decodeJsonString jsonString =
     case Decode.decodeString decodeSuccessfulResponse jsonString of
         Ok res ->
@@ -290,7 +289,7 @@ decodeJsonString jsonString =
             decodeJsonErrorString jsonString
 
 
-decodeJsonErrorString : String -> JsonResponse
+decodeJsonErrorString : String -> RegisterJsonResponse
 decodeJsonErrorString jsonString =
     let
         decoder =
