@@ -2,10 +2,11 @@ module Page.Register exposing (Model, Msg, init, update, view)
 
 import Html exposing (Html, div, form, span, text)
 import Html.Attributes exposing (class)
-import Http exposing (Error, Expect, Metadata, Response)
+import Http exposing (Metadata)
 import Json.Decode as Decode exposing (Decoder, bool, int, string)
 import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode as Encode
+import Request exposing (ErrorDetailed(..), expectStringDetailed)
 import Session exposing (Session, apiUrl, joinUrl)
 import View
     exposing
@@ -37,17 +38,9 @@ type alias Model =
 
 type Status
     = None
-    | Failure ErrorResponse
+    | Failure
     | Loading
-    | Success SuccessfulResponse
-
-
-type ErrorDetailed
-    = BadUrl String
-    | Timeout
-    | NetworkError
-    | BadStatus Http.Metadata String
-    | BadBody String
+    | Response JsonResponse
 
 
 init : Session -> ( Model, Cmd Msg )
@@ -62,6 +55,68 @@ init session =
       }
     , Cmd.none
     )
+
+
+
+-- UPDATE
+
+
+type Msg
+    = GotRegisterResponse (Result ErrorDetailed ( Metadata, String ))
+    | Register
+    | EmailChanged String
+    | PasswordChanged String
+    | FirstNameChanged String
+    | LastNameChanged String
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        GotRegisterResponse result ->
+            handleGotRegisterResponse result model
+
+        Register ->
+            ( { model | response = Loading }
+            , register model
+            )
+
+        EmailChanged email ->
+            ( { model | email = email }, Cmd.none )
+
+        PasswordChanged password ->
+            ( { model
+                | password = password
+                , passwordConfirm = password
+              }
+            , Cmd.none
+            )
+
+        FirstNameChanged firstName ->
+            ( { model | firstName = firstName }, Cmd.none )
+
+        LastNameChanged lastName ->
+            ( { model | lastName = lastName }, Cmd.none )
+
+
+handleGotRegisterResponse : Result ErrorDetailed ( Metadata, String ) -> Model -> ( Model, Cmd Msg )
+handleGotRegisterResponse result model =
+    case result of
+        Ok ( _, res ) ->
+            ( { model | response = Response (decodeJsonString res) }, Cmd.none )
+
+        Err err ->
+            handleErrorDetailed err model
+
+
+handleErrorDetailed : ErrorDetailed -> Model -> ( Model, Cmd Msg )
+handleErrorDetailed err model =
+    case err of
+        BadStatus _ res ->
+            ( { model | response = Response (decodeJsonString res) }, Cmd.none )
+
+        _ ->
+            ( { model | response = Failure }, Cmd.none )
 
 
 
@@ -128,106 +183,6 @@ viewAlternative =
 
 
 
--- UPDATE
-
-
-type Msg
-    = GotRegisterResponse (Result ErrorDetailed ( Metadata, String ))
-    | Register
-    | EmailChanged String
-    | PasswordChanged String
-    | FirstNameChanged String
-    | LastNameChanged String
-
-
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
-    case msg of
-        GotRegisterResponse result ->
-            case result of
-                Ok ( _, res ) ->
-                    ( { model | response = Success (decodeSuccessString res) }, Cmd.none )
-
-                Err err ->
-                    case err of
-                        BadStatus _ body ->
-                            ( { model | response = Failure (decodeErrorString body) }, Cmd.none )
-
-                        _ ->
-                            ( model, Cmd.none )
-
-        Register ->
-            ( { model | response = Loading }
-            , register model
-            )
-
-        EmailChanged email ->
-            ( { model | email = email }, Cmd.none )
-
-        PasswordChanged password ->
-            ( { model
-                | password = password
-                , passwordConfirm = password
-              }
-            , Cmd.none
-            )
-
-        FirstNameChanged firstName ->
-            ( { model | firstName = firstName }, Cmd.none )
-
-        LastNameChanged lastName ->
-            ( { model | lastName = lastName }, Cmd.none )
-
-
-decodeSuccessString : String -> SuccessfulResponse
-decodeSuccessString body =
-    let
-        result =
-            Decode.decodeString decodeSuccessfulResponse body
-    in
-    case result of
-        Ok res ->
-            res
-
-        Err _ ->
-            { id = ""
-            , collectionId = ""
-            , collectionName = ""
-            , created = ""
-            , updated = ""
-            , username = ""
-            , verified = False
-            , emailVisibility = False
-            , email = ""
-            , firstName = ""
-            , lastName = ""
-            }
-
-
-decodeErrorString : String -> ErrorResponse
-decodeErrorString body =
-    let
-        result =
-            Decode.decodeString decodeErrorResponse body
-    in
-    case result of
-        Ok res ->
-            res
-
-        Err _ ->
-            { code = 0
-            , message = ""
-            , data =
-                { email = Nothing
-                , password = Nothing
-                , passwordConfirm = Nothing
-                , firstName = Nothing
-                , lastName = Nothing
-                }
-            }
-
-
-
 -- HELPERS
 
 
@@ -255,6 +210,12 @@ encodeForm model =
 -- JSON
 
 
+type JsonResponse
+    = JsonError ErrorResponse
+    | JsonSuccess SuccessfulResponse
+    | JsonNone Decode.Error
+
+
 type alias SuccessfulResponse =
     { id : String
     , collectionId : String
@@ -268,22 +229,6 @@ type alias SuccessfulResponse =
     , firstName : String
     , lastName : String
     }
-
-
-decodeSuccessfulResponse : Decoder SuccessfulResponse
-decodeSuccessfulResponse =
-    Decode.succeed SuccessfulResponse
-        |> required "id" string
-        |> required "collectionId" string
-        |> required "collectionName" string
-        |> required "created" string
-        |> required "updated" string
-        |> required "username" string
-        |> required "verified" bool
-        |> required "emailVisibility" bool
-        |> required "email" string
-        |> required "firstName" string
-        |> required "lastName" string
 
 
 type alias ErrorResponse =
@@ -306,6 +251,22 @@ type alias ErrorMessage =
     { code : String
     , message : String
     }
+
+
+decodeSuccessfulResponse : Decoder SuccessfulResponse
+decodeSuccessfulResponse =
+    Decode.succeed SuccessfulResponse
+        |> required "id" string
+        |> required "collectionId" string
+        |> required "collectionName" string
+        |> required "created" string
+        |> required "updated" string
+        |> required "username" string
+        |> required "verified" bool
+        |> required "emailVisibility" bool
+        |> required "email" string
+        |> required "firstName" string
+        |> required "lastName" string
 
 
 decodeErrorResponse : Decoder ErrorResponse
@@ -333,25 +294,21 @@ decodeErrorMessage =
         |> required "message" string
 
 
-expectStringDetailed : (Result ErrorDetailed ( Metadata, String ) -> msg) -> Expect msg
-expectStringDetailed msg =
-    Http.expectStringResponse msg convertResponseString
+decodeJsonString : String -> JsonResponse
+decodeJsonString jsonString =
+    case Decode.decodeString decodeSuccessfulResponse jsonString of
+        Ok res ->
+            JsonSuccess res
+
+        Err _ ->
+            decodeJsonErrorString jsonString
 
 
-convertResponseString : Response String -> Result ErrorDetailed ( Metadata, String )
-convertResponseString httpResponse =
-    case httpResponse of
-        Http.BadUrl_ url ->
-            Err (BadUrl url)
+decodeJsonErrorString : String -> JsonResponse
+decodeJsonErrorString jsonString =
+    case Decode.decodeString decodeErrorResponse jsonString of
+        Ok res ->
+            JsonError res
 
-        Http.Timeout_ ->
-            Err Timeout
-
-        Http.NetworkError_ ->
-            Err NetworkError
-
-        Http.BadStatus_ metadata body ->
-            Err (BadStatus metadata body)
-
-        Http.GoodStatus_ metadata body ->
-            Ok ( metadata, body )
+        Err err ->
+            JsonNone err
