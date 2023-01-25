@@ -4,6 +4,7 @@ module View exposing
     , viewButtonImage
     , viewCheckbox
     , viewEmailInput
+    , viewErrors
     , viewFooter
     , viewInput
     , viewLink
@@ -13,10 +14,24 @@ module View exposing
     , viewTitle
     )
 
-import Html exposing (Attribute, Html, a, button, div, h1, img, input, p, text)
+import Html
+    exposing
+        ( Attribute
+        , Html
+        , a
+        , button
+        , div
+        , h1
+        , img
+        , input
+        , p
+        , span
+        , text
+        )
 import Html.Attributes exposing (class, href, name, src, type_)
 import Html.Events exposing (custom, onInput)
 import Json.Decode as Decode
+import Request exposing (ErrorMessage)
 
 
 
@@ -149,6 +164,20 @@ viewLabel name label =
         , Html.Attributes.name name
         ]
         [ text label ]
+
+
+viewErrors : List ErrorMessage -> Html msg
+viewErrors errors =
+    div [ class "fixed left-1/2 bottom-6 -translate-x-1/2" ]
+        (List.map viewError errors)
+
+
+viewError : ErrorMessage -> Html msg
+viewError error =
+    div [ class "bg-red-500 flex shadow-modal rounded gap-2 px-4 py-[0.72rem] mb-2 last:mb-0" ]
+        [ img [ src "/static/img/info.svg" ] []
+        , span [ class "text-white font-medium" ] [ text error.message ]
+        ]
 
 
 

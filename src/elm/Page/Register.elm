@@ -10,7 +10,6 @@ import Request
     exposing
         ( ErrorDetailed(..)
         , ErrorMessage
-        , ErrorResponse
         , JsonResponse(..)
         , ResponseResult
         )
@@ -21,6 +20,7 @@ import View
         , viewButtonImage
         , viewCheckbox
         , viewEmailInput
+        , viewErrors
         , viewInput
         , viewLink
         , viewPasswordInput
@@ -135,14 +135,16 @@ handleErrorDetailed err model =
 
 
 view : Model -> { title : String, content : Html Msg }
-view _ =
+view model =
     { title = "Stamp | Register"
     , content =
         div
             [ class <|
                 "flex justify-center items-center h-screen rounded-md px-4"
             ]
-            [ viewForm ]
+            [ viewForm
+            , fetchErrors model |> viewErrors
+            ]
     }
 
 
@@ -215,6 +217,36 @@ encodeForm model =
         , ( "firstName", Encode.string model.firstName )
         , ( "lastName", Encode.string model.lastName )
         ]
+
+
+fetchErrors : Model -> List ErrorMessage
+fetchErrors model =
+    case model.response of
+        Failure ->
+            [ Request.unknownError ]
+
+        Response jsonResponse ->
+            case jsonResponse of
+                JsonError err ->
+                    errorsToList [] err.data
+
+                JsonSuccess _ ->
+                    []
+
+                JsonNone _ ->
+                    [ Request.unknownError ]
+
+        _ ->
+            []
+
+
+errorsToList : List ErrorMessage -> ErrorData -> List ErrorMessage
+errorsToList list errorData =
+    Request.prependMaybeError errorData.email list
+        |> Request.prependMaybeError errorData.password
+        |> Request.prependMaybeError errorData.passwordConfirm
+        |> Request.prependMaybeError errorData.firstName
+        |> Request.prependMaybeError errorData.lastName
 
 
 

@@ -7,6 +7,8 @@ module Request exposing
     , decodeErrorMessage
     , decodeErrorResponse
     , expectStringDetailed
+    , prependMaybeError
+    , unknownError
     )
 
 import Http exposing (Expect, Metadata, Response)
@@ -85,3 +87,20 @@ decodeErrorMessage =
     Decode.succeed ErrorMessage
         |> required "code" string
         |> required "message" string
+
+
+unknownError : ErrorMessage
+unknownError =
+    { code = "Unknown"
+    , message = "An error occured"
+    }
+
+
+prependMaybeError : Maybe ErrorMessage -> List ErrorMessage -> List ErrorMessage
+prependMaybeError maybe list =
+    case maybe of
+        Just a ->
+            a :: list
+
+        Nothing ->
+            list
