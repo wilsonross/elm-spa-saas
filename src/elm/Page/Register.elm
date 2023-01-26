@@ -75,6 +75,7 @@ type Msg
     | PasswordChanged String
     | FirstNameChanged String
     | LastNameChanged String
+    | ResetErrorResponse
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -105,6 +106,9 @@ update msg model =
         LastNameChanged lastName ->
             ( { model | lastName = lastName }, Cmd.none )
 
+        ResetErrorResponse ->
+            ( { model | response = None }, Cmd.none )
+
 
 handleGotRegisterResponse : ResponseResult -> Model -> ( Model, Cmd Msg )
 handleGotRegisterResponse result model =
@@ -123,11 +127,13 @@ handleErrorDetailed err model =
     case err of
         BadStatus _ res ->
             ( { model | response = Response (decodeJsonString res) }
-            , Cmd.none
+            , View.delay 2500 ResetErrorResponse
             )
 
         _ ->
-            ( { model | response = Failure }, Cmd.none )
+            ( { model | response = Failure }
+            , View.delay 2500 ResetErrorResponse
+            )
 
 
 

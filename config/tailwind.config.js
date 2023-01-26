@@ -20,11 +20,26 @@ module.exports = {
       },
       animation: {
         carousel: "carousel 17s linear infinite",
+        errors: "errors 2.5s linear 1",
       },
       keyframes: {
         carousel: {
           from: { transform: "translateX(-50%)" },
           to: { transform: "translateX(0%)" },
+        },
+        errors: {
+          "0%": {
+            transform: "translate(-50%, 0%) scale(0.8)",
+            opacity: "0",
+          },
+          "5%, 75%": {
+            transform: "translate(-50%, 0%) scale(1)",
+            opacity: "1",
+          },
+          "95%, 100%": {
+            transform: "translate(-50%, 200%) scale(0.8)",
+            opacity: "0",
+          },
         },
       },
       boxShadow: {

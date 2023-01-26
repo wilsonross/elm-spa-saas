@@ -1,5 +1,6 @@
 module View exposing
     ( Link
+    , delay
     , viewAuthLogo
     , viewButtonImage
     , viewCheckbox
@@ -31,7 +32,10 @@ import Html
 import Html.Attributes exposing (class, href, name, src, type_)
 import Html.Events exposing (custom, onInput)
 import Json.Decode as Decode
+import List exposing (length)
+import Process
 import Request exposing (ErrorMessage)
+import Task
 
 
 
@@ -168,13 +172,24 @@ viewLabel name label =
 
 viewErrors : List ErrorMessage -> Html msg
 viewErrors errors =
-    div [ class "fixed left-1/2 bottom-6 -translate-x-1/2" ]
-        (List.map viewError errors)
+    if length errors > 0 then
+        div
+            [ class <|
+                "fixed left-1/2 bottom-6 -translate-x-1/2 animate-errors"
+            ]
+            (List.map viewError errors)
+
+    else
+        text ""
 
 
 viewError : ErrorMessage -> Html msg
 viewError error =
-    div [ class "bg-red-500 flex shadow-modal rounded gap-2 px-4 py-[0.72rem] mb-2 last:mb-0" ]
+    div
+        [ class <|
+            "bg-red-500 flex shadow-modal rounded gap-2 py-[0.72rem] mb-2 pr-4"
+                ++ " last:mb-0 pl-3"
+        ]
         [ img [ src "/static/img/info.svg" ] []
         , span [ class "text-white font-medium" ] [ text error.message ]
         ]
@@ -207,3 +222,14 @@ viewPasswordInput msg =
         [ class "mb-6", type_ "password", name "password" ]
         "Password"
         msg
+
+
+
+-- HELPERS
+
+
+delay : Float -> msg -> Cmd msg
+delay time msg =
+    Process.sleep time
+        |> Task.andThen (always <| Task.succeed msg)
+        |> Task.perform identity
