@@ -264,17 +264,16 @@ type alias RegisterJsonResponse =
 
 
 type alias SuccessfulResponse =
-    { id : String
-    , collectionId : String
+    { collectionId : String
     , collectionName : String
     , created : String
+    , emailVisibility : Bool
+    , firstName : String
+    , id : String
+    , lastName : String
     , updated : String
     , username : String
     , verified : Bool
-    , emailVisibility : Bool
-    , email : String
-    , firstName : String
-    , lastName : String
     }
 
 
@@ -290,17 +289,16 @@ type alias ErrorData =
 decodeSuccessfulResponse : Decoder SuccessfulResponse
 decodeSuccessfulResponse =
     Decode.succeed SuccessfulResponse
-        |> required "id" string
         |> required "collectionId" string
         |> required "collectionName" string
         |> required "created" string
+        |> required "emailVisibility" bool
+        |> required "firstName" string
+        |> required "id" string
+        |> required "lastName" string
         |> required "updated" string
         |> required "username" string
         |> required "verified" bool
-        |> required "emailVisibility" bool
-        |> required "email" string
-        |> required "firstName" string
-        |> required "lastName" string
 
 
 decodeErrorData : Decoder ErrorData
