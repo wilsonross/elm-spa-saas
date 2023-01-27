@@ -1,16 +1,15 @@
 module Page.Login exposing (Model, Msg, init, view)
 
 import Html exposing (Html, div, form, span, text)
-import Html.Attributes exposing (class)
+import Html.Attributes exposing (class, name, type_)
 import Session exposing (Session)
 import View
     exposing
         ( viewAuthLogo
         , viewButtonImage
         , viewCheckbox
-        , viewEmailInput
+        , viewInput
         , viewLink
-        , viewPasswordInput
         , viewTitle
         )
 
@@ -86,6 +85,19 @@ viewAlternative =
         , viewLink [ class "text-turq" ] "/register" "Sign up"
         , span [] [ text " now" ]
         ]
+
+
+viewEmailInput : (String -> msg) -> Html msg
+viewEmailInput msg =
+    viewInput [ class "mb-6", type_ "email", name "email" ] "Email" msg
+
+
+viewPasswordInput : (String -> msg) -> Html msg
+viewPasswordInput msg =
+    viewInput
+        [ class "mb-6", type_ "password", name "password" ]
+        "Password"
+        msg
 
 
 

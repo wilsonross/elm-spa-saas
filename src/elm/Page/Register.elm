@@ -1,7 +1,7 @@
 module Page.Register exposing (Model, Msg, init, update, view)
 
-import Html exposing (Html, div, form, span, text)
-import Html.Attributes exposing (class)
+import Html exposing (Attribute, Html, div, form, span, text)
+import Html.Attributes exposing (class, name, type_)
 import Http
 import Json.Decode as Decode exposing (Decoder, bool, string)
 import Json.Decode.Pipeline exposing (optional, required)
@@ -19,11 +19,9 @@ import View
         ( viewAuthLogo
         , viewButtonImage
         , viewCheckbox
-        , viewEmailInput
         , viewErrors
         , viewInput
         , viewLink
-        , viewPasswordInput
         , viewTitle
         )
 
@@ -148,14 +146,14 @@ view model =
             [ class <|
                 "flex justify-center items-center h-screen rounded-md px-4"
             ]
-            [ viewForm
+            [ viewForm model
             , fetchErrors model |> viewErrors
             ]
     }
 
 
-viewForm : Html Msg
-viewForm =
+viewForm : Model -> Html Msg
+viewForm model =
     form
         [ class <|
             "bg-white max-w-md w-full shadow-portal px-[1.25rem] pt-[3.125rem]"
@@ -163,21 +161,47 @@ viewForm =
         ]
         [ viewAuthLogo
         , viewTitle "Sign Up"
-        , viewNameInput
-        , viewEmailInput EmailChanged
-        , viewPasswordInput PasswordChanged
+        , viewNameInput model
+        , viewEmailInput model EmailChanged
+        , viewPasswordInput model PasswordChanged
         , viewAdditional
         , viewLoginButton
         , viewAlternative
         ]
 
 
-viewNameInput : Html Msg
-viewNameInput =
+viewNameInput : Model -> Html Msg
+viewNameInput model =
     div [ class "flex gap-6 mb-6" ]
-        [ viewInput [] "First name" FirstNameChanged
-        , viewInput [] "Last name" LastNameChanged
+        [ viewInput
+            (name "firstName" :: (retrieveErrorData model |> invalidFirstName))
+            "First name"
+            FirstNameChanged
+        , viewInput
+            (name "lastName" :: (retrieveErrorData model |> invalidLastName))
+            "Last name"
+            LastNameChanged
         ]
+
+
+viewEmailInput : Model -> (String -> msg) -> Html msg
+viewEmailInput model msg =
+    viewInput
+        ([ class "mb-6", type_ "email", name "email" ]
+            ++ (retrieveErrorData model |> invalidEmail)
+        )
+        "Email"
+        msg
+
+
+viewPasswordInput : Model -> (String -> msg) -> Html msg
+viewPasswordInput model msg =
+    viewInput
+        ([ class "mb-6", type_ "password", name "password" ]
+            ++ (retrieveErrorData model |> invalidPassword)
+        )
+        "Password"
+        msg
 
 
 viewAdditional : Html msg
@@ -253,6 +277,71 @@ errorsToList list errorData =
         |> Request.prependMaybeError errorData.passwordConfirm
         |> Request.prependMaybeError errorData.firstName
         |> Request.prependMaybeError errorData.lastName
+
+
+retrieveErrorData : Model -> Maybe ErrorData
+retrieveErrorData model =
+    case model.response of
+        Response jsonResponse ->
+            case jsonResponse of
+                JsonError err ->
+                    Just err.data
+
+                _ ->
+                    Nothing
+
+        _ ->
+            Nothing
+
+
+maybeAttribute : Maybe a -> List (Attribute msg) -> List (Attribute msg)
+maybeAttribute maybe attr =
+    case maybe of
+        Just _ ->
+            attr
+
+        Nothing ->
+            []
+
+
+invalidFirstName : Maybe ErrorData -> List (Attribute msg)
+invalidFirstName errorData =
+    case errorData of
+        Just data ->
+            maybeAttribute data.firstName [ class "border-red-500" ]
+
+        Nothing ->
+            []
+
+
+invalidLastName : Maybe ErrorData -> List (Attribute msg)
+invalidLastName errorData =
+    case errorData of
+        Just data ->
+            maybeAttribute data.lastName [ class "border-red-500" ]
+
+        Nothing ->
+            []
+
+
+invalidEmail : Maybe ErrorData -> List (Attribute msg)
+invalidEmail errorData =
+    case errorData of
+        Just data ->
+            maybeAttribute data.email [ class "border-red-500" ]
+
+        Nothing ->
+            []
+
+
+invalidPassword : Maybe ErrorData -> List (Attribute msg)
+invalidPassword errorData =
+    case errorData of
+        Just data ->
+            maybeAttribute data.password [ class "border-red-500" ]
+
+        Nothing ->
+            []
 
 
 

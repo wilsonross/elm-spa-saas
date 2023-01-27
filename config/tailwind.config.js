@@ -20,7 +20,7 @@ module.exports = {
       },
       animation: {
         carousel: "carousel 17s linear infinite",
-        errors: "errors 2.5s linear 1",
+        errors: "errors 3s linear 1",
       },
       keyframes: {
         carousel: {

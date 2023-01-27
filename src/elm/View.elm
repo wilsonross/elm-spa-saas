@@ -4,14 +4,12 @@ module View exposing
     , viewAuthLogo
     , viewButtonImage
     , viewCheckbox
-    , viewEmailInput
     , viewErrors
     , viewFooter
     , viewInput
     , viewLink
     , viewLinkImage
     , viewLogo
-    , viewPasswordInput
     , viewTitle
     )
 
@@ -110,6 +108,7 @@ viewInput attr placeholder msg =
                             "focus-visible:outline-none block h-10 w-full"
                                 ++ " border border-grey-3 px-[0.93rem] rounded"
                                 ++ " placeholder:text-grey-2 text-sm"
+                                ++ " transition-colors duration-700 ease-out"
                        )
                     :: attr
                )
@@ -209,19 +208,6 @@ viewTitle title =
     h1 [ class "text-sm font-bold mb-[0.563rem]" ]
         [ text title
         ]
-
-
-viewEmailInput : (String -> msg) -> Html msg
-viewEmailInput msg =
-    viewInput [ class "mb-6", type_ "email", name "email" ] "Email" msg
-
-
-viewPasswordInput : (String -> msg) -> Html msg
-viewPasswordInput msg =
-    viewInput
-        [ class "mb-6", type_ "password", name "password" ]
-        "Password"
-        msg
 
 
 
