@@ -1,7 +1,7 @@
 module Page.Register exposing (Model, Msg, init, update, view)
 
 import Html exposing (Attribute, Html, div, form, span, text)
-import Html.Attributes exposing (class, name, type_)
+import Html.Attributes exposing (class, disabled, name, type_)
 import Http
 import Json.Decode as Decode exposing (Decoder, bool, string)
 import Json.Decode.Pipeline exposing (optional, required)
@@ -33,12 +33,18 @@ import View
 type alias Model =
     { session : Session
     , response : Status
-    , email : String
-    , password : String
-    , passwordConfirm : String
-    , firstName : String
-    , lastName : String
+    , email : Input
+    , password : Input
+    , passwordConfirm : Input
+    , firstName : Input
+    , lastName : Input
     }
+
+
+type Input
+    = Empty
+    | Invalid String
+    | Valid String
 
 
 type Status
@@ -52,11 +58,11 @@ init : Session -> ( Model, Cmd Msg )
 init session =
     ( { session = session
       , response = None
-      , email = ""
-      , password = ""
-      , passwordConfirm = ""
-      , firstName = ""
-      , lastName = ""
+      , email = Empty
+      , password = Empty
+      , passwordConfirm = Empty
+      , firstName = Empty
+      , lastName = Empty
       }
     , Cmd.none
     )
@@ -88,21 +94,25 @@ update msg model =
             )
 
         EmailChanged email ->
-            ( { model | email = email }, Cmd.none )
+            ( { model | email = invalidInput email checkEmail }, Cmd.none )
 
         PasswordChanged password ->
             ( { model
-                | password = password
-                , passwordConfirm = password
+                | password = invalidInput password checkPassword
+                , passwordConfirm = invalidInput password checkPassword
               }
             , Cmd.none
             )
 
         FirstNameChanged firstName ->
-            ( { model | firstName = firstName }, Cmd.none )
+            ( { model | firstName = invalidInput firstName (\_ -> True) }
+            , Cmd.none
+            )
 
         LastNameChanged lastName ->
-            ( { model | lastName = lastName }, Cmd.none )
+            ( { model | lastName = invalidInput lastName (\_ -> True) }
+            , Cmd.none
+            )
 
         ResetErrorResponse ->
             ( { model | response = None }, Cmd.none )
@@ -132,6 +142,25 @@ handleErrorDetailed err model =
             ( { model | response = Failure }
             , View.delay 2500 ResetErrorResponse
             )
+
+
+submitActive : Model -> Bool
+submitActive model =
+    inputToBool model.firstName
+        && inputToBool model.lastName
+        && inputToBool model.email
+        && inputToBool model.password
+        && inputToBool model.passwordConfirm
+
+
+inputToBool : Input -> Bool
+inputToBool input =
+    case input of
+        Valid _ ->
+            True
+
+        _ ->
+            False
 
 
 
@@ -165,7 +194,7 @@ viewForm model =
         , viewEmailInput model EmailChanged
         , viewPasswordInput model PasswordChanged
         , viewAdditional
-        , viewLoginButton
+        , viewRegisterButton model
         , viewAlternative
         ]
 
@@ -174,11 +203,19 @@ viewNameInput : Model -> Html Msg
 viewNameInput model =
     div [ class "flex gap-6 mb-6" ]
         [ viewInput
-            (name "firstName" :: (retrieveErrorData model |> invalidFirstName))
+            (name "firstName"
+                :: (invalidBeforePost model.firstName
+                        ++ (retrieveErrorData model |> invalidFirstName)
+                   )
+            )
             "First name"
             FirstNameChanged
         , viewInput
-            (name "lastName" :: (retrieveErrorData model |> invalidLastName))
+            (name "lastName"
+                :: (invalidBeforePost model.lastName
+                        ++ (retrieveErrorData model |> invalidLastName)
+                   )
+            )
             "Last name"
             LastNameChanged
         ]
@@ -188,6 +225,7 @@ viewEmailInput : Model -> (String -> msg) -> Html msg
 viewEmailInput model msg =
     viewInput
         ([ class "mb-6", type_ "email", name "email" ]
+            ++ invalidBeforePost model.email
             ++ (retrieveErrorData model |> invalidEmail)
         )
         "Email"
@@ -198,6 +236,7 @@ viewPasswordInput : Model -> (String -> msg) -> Html msg
 viewPasswordInput model msg =
     viewInput
         ([ class "mb-6", type_ "password", name "password" ]
+            ++ invalidBeforePost model.password
             ++ (retrieveErrorData model |> invalidPassword)
         )
         "Password"
@@ -211,9 +250,20 @@ viewAdditional =
         ]
 
 
-viewLoginButton : Html Msg
-viewLoginButton =
-    viewButtonImage [ class "w-full mb-4" ] Register "/static/img/signup.svg"
+viewRegisterButton : Model -> Html Msg
+viewRegisterButton model =
+    let
+        disabledAttr =
+            if submitActive model then
+                []
+
+            else
+                [ disabled True ]
+    in
+    viewButtonImage
+        (class "w-full mb-4" :: disabledAttr)
+        Register
+        "/static/img/signup.svg"
 
 
 viewAlternative : Html msg
@@ -241,12 +291,35 @@ register model =
 encodeForm : Model -> Encode.Value
 encodeForm model =
     Encode.object
-        [ ( "email", Encode.string model.email )
-        , ( "password", Encode.string model.password )
-        , ( "passwordConfirm", Encode.string model.passwordConfirm )
-        , ( "firstName", Encode.string model.firstName )
-        , ( "lastName", Encode.string model.lastName )
+        [ ( "email"
+          , Encode.string <| stringFromInput model.email
+          )
+        , ( "password"
+          , Encode.string <| stringFromInput model.password
+          )
+        , ( "passwordConfirm"
+          , Encode.string <| stringFromInput model.passwordConfirm
+          )
+        , ( "firstName"
+          , Encode.string <| stringFromInput model.firstName
+          )
+        , ( "lastName"
+          , Encode.string <| stringFromInput model.lastName
+          )
         ]
+
+
+stringFromInput : Input -> String
+stringFromInput input =
+    case input of
+        Empty ->
+            ""
+
+        Invalid str ->
+            str
+
+        Valid str ->
+            str
 
 
 fetchErrors : Model -> List ErrorMessage
@@ -342,6 +415,40 @@ invalidPassword errorData =
 
         Nothing ->
             []
+
+
+invalidBeforePost : Input -> List (Attribute msg)
+invalidBeforePost input =
+    case input of
+        Invalid _ ->
+            [ class "border-red-500" ]
+
+        _ ->
+            []
+
+
+invalidInput : String -> (String -> Bool) -> Input
+invalidInput input check =
+    case input of
+        "" ->
+            Empty
+
+        _ ->
+            if check input then
+                Valid input
+
+            else
+                Invalid input
+
+
+checkPassword : String -> Bool
+checkPassword password =
+    String.length password >= 8 && String.length password <= 32
+
+
+checkEmail : String -> Bool
+checkEmail email =
+    String.contains "@" email && String.contains "." email
 
 
 
