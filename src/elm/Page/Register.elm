@@ -3,10 +3,12 @@ module Page.Register exposing (Model, Msg, init, update, view)
 import Html exposing (Attribute, Html, div, form, span, text)
 import Html.Attributes exposing (class, disabled, name, type_)
 import Http
+import Input exposing (Input(..), viewCheckbox, viewInput)
 import Json.Decode as Decode exposing (Decoder, bool, string)
 import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode as Encode
-import Request
+import Request exposing (Status(..))
+import Response
     exposing
         ( ErrorDetailed(..)
         , ErrorMessage
@@ -18,9 +20,7 @@ import View
     exposing
         ( viewAuthLogo
         , viewButtonImage
-        , viewCheckbox
         , viewErrors
-        , viewInput
         , viewLink
         , viewTitle
         )
@@ -32,26 +32,13 @@ import View
 
 type alias Model =
     { session : Session
-    , response : Status
+    , response : Status RegisterJsonResponse
     , email : Input
     , password : Input
     , passwordConfirm : Input
     , firstName : Input
     , lastName : Input
     }
-
-
-type Input
-    = Empty
-    | Invalid String
-    | Valid String
-
-
-type Status
-    = None
-    | Failure
-    | Loading
-    | Response RegisterJsonResponse
 
 
 init : Session -> ( Model, Cmd Msg )
@@ -94,23 +81,25 @@ update msg model =
             )
 
         EmailChanged email ->
-            ( { model | email = invalidInput email checkEmail }, Cmd.none )
+            ( { model | email = Input.valueToInput email checkEmail }
+            , Cmd.none
+            )
 
         PasswordChanged password ->
             ( { model
-                | password = invalidInput password checkPassword
-                , passwordConfirm = invalidInput password checkPassword
+                | password = Input.valueToInput password checkPassword
+                , passwordConfirm = Input.valueToInput password checkPassword
               }
             , Cmd.none
             )
 
         FirstNameChanged firstName ->
-            ( { model | firstName = invalidInput firstName (\_ -> True) }
+            ( { model | firstName = Input.valueToInput firstName (\_ -> True) }
             , Cmd.none
             )
 
         LastNameChanged lastName ->
-            ( { model | lastName = invalidInput lastName (\_ -> True) }
+            ( { model | lastName = Input.valueToInput lastName (\_ -> True) }
             , Cmd.none
             )
 
@@ -122,7 +111,7 @@ handleGotRegisterResponse : ResponseResult -> Model -> ( Model, Cmd Msg )
 handleGotRegisterResponse result model =
     case result of
         Ok ( _, res ) ->
-            ( { model | response = Response (decodeJsonString res) }
+            ( { model | response = Response (stringToJson res) }
             , Cmd.none
             )
 
@@ -134,7 +123,7 @@ handleErrorDetailed : ErrorDetailed -> Model -> ( Model, Cmd Msg )
 handleErrorDetailed err model =
     case err of
         BadStatus _ res ->
-            ( { model | response = Response (decodeJsonString res) }
+            ( { model | response = Response (stringToJson res) }
             , View.delay 2500 ResetErrorResponse
             )
 
@@ -142,25 +131,6 @@ handleErrorDetailed err model =
             ( { model | response = Failure }
             , View.delay 2500 ResetErrorResponse
             )
-
-
-submitActive : Model -> Bool
-submitActive model =
-    inputToBool model.firstName
-        && inputToBool model.lastName
-        && inputToBool model.email
-        && inputToBool model.password
-        && inputToBool model.passwordConfirm
-
-
-inputToBool : Input -> Bool
-inputToBool input =
-    case input of
-        Valid _ ->
-            True
-
-        _ ->
-            False
 
 
 
@@ -203,18 +173,14 @@ viewNameInput : Model -> Html Msg
 viewNameInput model =
     div [ class "flex gap-6 mb-6" ]
         [ viewInput
-            (name "firstName"
-                :: (invalidBeforePost model.firstName
-                        ++ (retrieveErrorData model |> invalidFirstName)
-                   )
+            ([ name "firstName", Input.inputBorder model.firstName ]
+                ++ (retrieveErrorData model |> invalidFirstName)
             )
             "First name"
             FirstNameChanged
         , viewInput
-            (name "lastName"
-                :: (invalidBeforePost model.lastName
-                        ++ (retrieveErrorData model |> invalidLastName)
-                   )
+            ([ name "lastName", Input.inputBorder model.lastName ]
+                ++ (retrieveErrorData model |> invalidLastName)
             )
             "Last name"
             LastNameChanged
@@ -224,8 +190,11 @@ viewNameInput model =
 viewEmailInput : Model -> (String -> msg) -> Html msg
 viewEmailInput model msg =
     viewInput
-        ([ class "mb-6", type_ "email", name "email" ]
-            ++ invalidBeforePost model.email
+        ([ class "mb-6"
+         , type_ "email"
+         , name "email"
+         , Input.inputBorder model.email
+         ]
             ++ (retrieveErrorData model |> invalidEmail)
         )
         "Email"
@@ -235,8 +204,11 @@ viewEmailInput model msg =
 viewPasswordInput : Model -> (String -> msg) -> Html msg
 viewPasswordInput model msg =
     viewInput
-        ([ class "mb-6", type_ "password", name "password" ]
-            ++ invalidBeforePost model.password
+        ([ class "mb-6"
+         , type_ "password"
+         , name "password"
+         , Input.inputBorder model.password
+         ]
             ++ (retrieveErrorData model |> invalidPassword)
         )
         "Password"
@@ -284,7 +256,7 @@ register model =
     Http.post
         { url = joinUrl (apiUrl model.session) "/api/collections/users/records"
         , body = Http.jsonBody (encodeForm model)
-        , expect = Request.expectStringDetailed GotRegisterResponse
+        , expect = Response.expectStringDetailed GotRegisterResponse
         }
 
 
@@ -292,41 +264,28 @@ encodeForm : Model -> Encode.Value
 encodeForm model =
     Encode.object
         [ ( "email"
-          , Encode.string <| stringFromInput model.email
+          , Encode.string <| Input.stringFromInput model.email
           )
         , ( "password"
-          , Encode.string <| stringFromInput model.password
+          , Encode.string <| Input.stringFromInput model.password
           )
         , ( "passwordConfirm"
-          , Encode.string <| stringFromInput model.passwordConfirm
+          , Encode.string <| Input.stringFromInput model.passwordConfirm
           )
         , ( "firstName"
-          , Encode.string <| stringFromInput model.firstName
+          , Encode.string <| Input.stringFromInput model.firstName
           )
         , ( "lastName"
-          , Encode.string <| stringFromInput model.lastName
+          , Encode.string <| Input.stringFromInput model.lastName
           )
         ]
-
-
-stringFromInput : Input -> String
-stringFromInput input =
-    case input of
-        Empty ->
-            ""
-
-        Invalid str ->
-            str
-
-        Valid str ->
-            str
 
 
 fetchErrors : Model -> List ErrorMessage
 fetchErrors model =
     case model.response of
         Failure ->
-            [ Request.unknownError ]
+            [ Response.unknownError ]
 
         Response jsonResponse ->
             case jsonResponse of
@@ -337,7 +296,7 @@ fetchErrors model =
                     []
 
                 JsonNone _ ->
-                    [ Request.unknownError ]
+                    [ Response.unknownError ]
 
         _ ->
             []
@@ -345,11 +304,11 @@ fetchErrors model =
 
 errorsToList : List ErrorMessage -> ErrorData -> List ErrorMessage
 errorsToList list errorData =
-    Request.prependMaybeError errorData.email list
-        |> Request.prependMaybeError errorData.password
-        |> Request.prependMaybeError errorData.passwordConfirm
-        |> Request.prependMaybeError errorData.firstName
-        |> Request.prependMaybeError errorData.lastName
+    Response.prependMaybeError errorData.email list
+        |> Response.prependMaybeError errorData.password
+        |> Response.prependMaybeError errorData.passwordConfirm
+        |> Response.prependMaybeError errorData.firstName
+        |> Response.prependMaybeError errorData.lastName
 
 
 retrieveErrorData : Model -> Maybe ErrorData
@@ -417,30 +376,6 @@ invalidPassword errorData =
             []
 
 
-invalidBeforePost : Input -> List (Attribute msg)
-invalidBeforePost input =
-    case input of
-        Invalid _ ->
-            [ class "border-red-500" ]
-
-        _ ->
-            []
-
-
-invalidInput : String -> (String -> Bool) -> Input
-invalidInput input check =
-    case input of
-        "" ->
-            Empty
-
-        _ ->
-            if check input then
-                Valid input
-
-            else
-                Invalid input
-
-
 checkPassword : String -> Bool
 checkPassword password =
     String.length password >= 8 && String.length password <= 32
@@ -449,6 +384,15 @@ checkPassword password =
 checkEmail : String -> Bool
 checkEmail email =
     String.contains "@" email && String.contains "." email
+
+
+submitActive : Model -> Bool
+submitActive model =
+    Input.inputToBool model.firstName
+        && Input.inputToBool model.lastName
+        && Input.inputToBool model.email
+        && Input.inputToBool model.password
+        && Input.inputToBool model.passwordConfirm
 
 
 
@@ -501,7 +445,7 @@ decodeErrorData : Decoder ErrorData
 decodeErrorData =
     let
         decoder =
-            Request.decodeErrorMessage
+            Response.decodeErrorMessage
     in
     Decode.succeed ErrorData
         |> optional "email" (Decode.map Just decoder) Nothing
@@ -511,21 +455,21 @@ decodeErrorData =
         |> optional "lastName" (Decode.map Just decoder) Nothing
 
 
-decodeJsonString : String -> RegisterJsonResponse
-decodeJsonString jsonString =
+stringToJson : String -> RegisterJsonResponse
+stringToJson jsonString =
     case Decode.decodeString decodeSuccessfulResponse jsonString of
         Ok res ->
             JsonSuccess res
 
         Err _ ->
-            decodeJsonErrorString jsonString
+            stringToJson_ jsonString
 
 
-decodeJsonErrorString : String -> RegisterJsonResponse
-decodeJsonErrorString jsonString =
+stringToJson_ : String -> RegisterJsonResponse
+stringToJson_ jsonString =
     let
         decoder =
-            Request.decodeErrorResponse decodeErrorData
+            Response.decodeErrorResponse decodeErrorData
     in
     case Decode.decodeString decoder jsonString of
         Ok res ->

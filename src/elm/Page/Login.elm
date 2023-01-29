@@ -2,13 +2,12 @@ module Page.Login exposing (Model, Msg, init, view)
 
 import Html exposing (Html, div, form, span, text)
 import Html.Attributes exposing (class, name, type_)
+import Input exposing (viewCheckbox, viewInput)
 import Session exposing (Session)
 import View
     exposing
         ( viewAuthLogo
         , viewButtonImage
-        , viewCheckbox
-        , viewInput
         , viewLink
         , viewTitle
         )
