@@ -14,6 +14,11 @@ module Response exposing
 import Http exposing (Expect, Metadata, Response)
 import Json.Decode as Decode exposing (Decoder, Error, int, string)
 import Json.Decode.Pipeline exposing (required)
+import Request exposing (Status(..))
+
+
+
+-- MODEL
 
 
 type alias ResponseResult =
@@ -25,6 +30,10 @@ type ErrorDetailed
     | Timeout
     | NetworkError
     | BadStatus Http.Metadata String
+
+
+
+-- HELPERS
 
 
 expectStringDetailed : (ResponseResult -> msg) -> Expect msg

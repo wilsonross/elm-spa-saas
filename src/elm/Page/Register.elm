@@ -1,5 +1,6 @@
 module Page.Register exposing (Model, Msg, init, update, view)
 
+import Helper
 import Html exposing (Attribute, Html, div, form, span, text)
 import Html.Attributes exposing (class, disabled, name, type_)
 import Http
@@ -72,8 +73,8 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        GotRegisterResponse result ->
-            handleGotRegisterResponse result model
+        GotRegisterResponse res ->
+            updateWithResponse res model
 
         Register ->
             ( { model | response = Loading }
@@ -107,8 +108,8 @@ update msg model =
             ( { model | response = None }, Cmd.none )
 
 
-handleGotRegisterResponse : ResponseResult -> Model -> ( Model, Cmd Msg )
-handleGotRegisterResponse result model =
+updateWithResponse : ResponseResult -> Model -> ( Model, Cmd Msg )
+updateWithResponse result model =
     case result of
         Ok ( _, res ) ->
             ( { model | response = Response (stringToJson res) }
@@ -116,11 +117,11 @@ handleGotRegisterResponse result model =
             )
 
         Err err ->
-            handleErrorDetailed err model
+            updateWithError err model
 
 
-handleErrorDetailed : ErrorDetailed -> Model -> ( Model, Cmd Msg )
-handleErrorDetailed err model =
+updateWithError : ErrorDetailed -> Model -> ( Model, Cmd Msg )
+updateWithError err model =
     case err of
         BadStatus _ res ->
             ( { model | response = Response (stringToJson res) }
@@ -146,7 +147,7 @@ view model =
                 "flex justify-center items-center h-screen rounded-md px-4"
             ]
             [ viewForm model
-            , fetchErrors model |> viewErrors
+            , errorsFromStatus model.response |> viewErrors
             ]
     }
 
@@ -174,13 +175,13 @@ viewNameInput model =
     div [ class "flex gap-6 mb-6" ]
         [ viewInput
             ([ name "firstName", Input.inputBorder model.firstName ]
-                ++ (retrieveErrorData model |> invalidFirstName)
+                ++ (statusToMaybeError model.response |> invalidFirstName)
             )
             "First name"
             FirstNameChanged
         , viewInput
             ([ name "lastName", Input.inputBorder model.lastName ]
-                ++ (retrieveErrorData model |> invalidLastName)
+                ++ (statusToMaybeError model.response |> invalidLastName)
             )
             "Last name"
             LastNameChanged
@@ -195,7 +196,7 @@ viewEmailInput model msg =
          , name "email"
          , Input.inputBorder model.email
          ]
-            ++ (retrieveErrorData model |> invalidEmail)
+            ++ (statusToMaybeError model.response |> invalidEmail)
         )
         "Email"
         msg
@@ -209,7 +210,7 @@ viewPasswordInput model msg =
          , name "password"
          , Input.inputBorder model.password
          ]
-            ++ (retrieveErrorData model |> invalidPassword)
+            ++ (statusToMaybeError model.response |> invalidPassword)
         )
         "Password"
         msg
@@ -260,120 +261,44 @@ register model =
         }
 
 
-encodeForm : Model -> Encode.Value
-encodeForm model =
-    Encode.object
-        [ ( "email"
-          , Encode.string <| Input.stringFromInput model.email
-          )
-        , ( "password"
-          , Encode.string <| Input.stringFromInput model.password
-          )
-        , ( "passwordConfirm"
-          , Encode.string <| Input.stringFromInput model.passwordConfirm
-          )
-        , ( "firstName"
-          , Encode.string <| Input.stringFromInput model.firstName
-          )
-        , ( "lastName"
-          , Encode.string <| Input.stringFromInput model.lastName
-          )
-        ]
-
-
-fetchErrors : Model -> List ErrorMessage
-fetchErrors model =
-    case model.response of
-        Failure ->
-            [ Response.unknownError ]
-
-        Response jsonResponse ->
-            case jsonResponse of
-                JsonError err ->
-                    errorsToList [] err.data
-
-                JsonSuccess _ ->
-                    []
-
-                JsonNone _ ->
-                    [ Response.unknownError ]
-
-        _ ->
-            []
-
-
-errorsToList : List ErrorMessage -> ErrorData -> List ErrorMessage
-errorsToList list errorData =
-    Response.prependMaybeError errorData.email list
-        |> Response.prependMaybeError errorData.password
-        |> Response.prependMaybeError errorData.passwordConfirm
-        |> Response.prependMaybeError errorData.firstName
-        |> Response.prependMaybeError errorData.lastName
-
-
-retrieveErrorData : Model -> Maybe ErrorData
-retrieveErrorData model =
-    case model.response of
-        Response jsonResponse ->
-            case jsonResponse of
-                JsonError err ->
-                    Just err.data
-
-                _ ->
-                    Nothing
-
-        _ ->
-            Nothing
-
-
-maybeAttribute : Maybe a -> List (Attribute msg) -> List (Attribute msg)
-maybeAttribute maybe attr =
-    case maybe of
-        Just _ ->
-            attr
-
-        Nothing ->
-            []
-
-
 invalidFirstName : Maybe ErrorData -> List (Attribute msg)
 invalidFirstName errorData =
     case errorData of
         Just data ->
-            maybeAttribute data.firstName [ class "border-red-500" ]
+            Helper.maybeAttribute data.firstName [ class "border-red-500" ]
 
         Nothing ->
-            []
+            [ class "border-grey-3" ]
 
 
 invalidLastName : Maybe ErrorData -> List (Attribute msg)
 invalidLastName errorData =
     case errorData of
         Just data ->
-            maybeAttribute data.lastName [ class "border-red-500" ]
+            Helper.maybeAttribute data.lastName [ class "border-red-500" ]
 
         Nothing ->
-            []
+            [ class "border-grey-3" ]
 
 
 invalidEmail : Maybe ErrorData -> List (Attribute msg)
 invalidEmail errorData =
     case errorData of
         Just data ->
-            maybeAttribute data.email [ class "border-red-500" ]
+            Helper.maybeAttribute data.email [ class "border-red-500" ]
 
         Nothing ->
-            []
+            [ class "border-grey-3" ]
 
 
 invalidPassword : Maybe ErrorData -> List (Attribute msg)
 invalidPassword errorData =
     case errorData of
         Just data ->
-            maybeAttribute data.password [ class "border-red-500" ]
+            Helper.maybeAttribute data.password [ class "border-red-500" ]
 
         Nothing ->
-            []
+            [ class "border-grey-3" ]
 
 
 checkPassword : String -> Bool
@@ -393,6 +318,55 @@ submitActive model =
         && Input.inputToBool model.email
         && Input.inputToBool model.password
         && Input.inputToBool model.passwordConfirm
+
+
+
+-- ERROR HELPERS
+
+
+createErrorList : List ErrorMessage -> ErrorData -> List ErrorMessage
+createErrorList list errorData =
+    Response.prependMaybeError errorData.email list
+        |> Response.prependMaybeError errorData.password
+        |> Response.prependMaybeError errorData.passwordConfirm
+        |> Response.prependMaybeError errorData.firstName
+        |> Response.prependMaybeError errorData.lastName
+
+
+statusToMaybeError : Status RegisterJsonResponse -> Maybe ErrorData
+statusToMaybeError status =
+    case status of
+        Response jsonResponse ->
+            case jsonResponse of
+                JsonError err ->
+                    Just err.data
+
+                _ ->
+                    Nothing
+
+        _ ->
+            Nothing
+
+
+errorsFromStatus : Status RegisterJsonResponse -> List ErrorMessage
+errorsFromStatus status =
+    case status of
+        Failure ->
+            [ Response.unknownError ]
+
+        Response jsonResponse ->
+            case jsonResponse of
+                JsonError err ->
+                    createErrorList [] err.data
+
+                JsonSuccess _ ->
+                    []
+
+                JsonNone _ ->
+                    [ Response.unknownError ]
+
+        _ ->
+            []
 
 
 
@@ -477,3 +451,24 @@ stringToJson_ jsonString =
 
         Err err ->
             JsonNone err
+
+
+encodeForm : Model -> Encode.Value
+encodeForm model =
+    Encode.object
+        [ ( "email"
+          , Encode.string <| Input.stringFromInput model.email
+          )
+        , ( "password"
+          , Encode.string <| Input.stringFromInput model.password
+          )
+        , ( "passwordConfirm"
+          , Encode.string <| Input.stringFromInput model.passwordConfirm
+          )
+        , ( "firstName"
+          , Encode.string <| Input.stringFromInput model.firstName
+          )
+        , ( "lastName"
+          , Encode.string <| Input.stringFromInput model.lastName
+          )
+        ]
