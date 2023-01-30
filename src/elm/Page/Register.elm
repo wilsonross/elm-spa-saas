@@ -5,8 +5,8 @@ import Html exposing (Attribute, Html, div, form, span, text)
 import Html.Attributes exposing (class, disabled, name, type_)
 import Http
 import Input exposing (Input(..), viewCheckbox, viewInput)
-import Json.Decode as Decode exposing (Decoder, bool, string)
-import Json.Decode.Pipeline exposing (optional, required)
+import Json.Decode as Decode exposing (Decoder)
+import Json.Decode.Pipeline exposing (optional)
 import Json.Encode as Encode
 import Request exposing (Status(..))
 import Response
@@ -15,6 +15,7 @@ import Response
         , ErrorMessage
         , JsonResponse(..)
         , ResponseResult
+        , UserResponse
         )
 import Session exposing (Session, apiUrl, joinUrl)
 import View
@@ -320,6 +321,14 @@ submitActive model =
         && Input.inputToBool model.passwordConfirm
 
 
+stringToJson : String -> RegisterJsonResponse
+stringToJson str =
+    Response.stringToJson
+        decodeErrorData
+        Response.decodeUserResponse
+        str
+
+
 
 -- ERROR HELPERS
 
@@ -374,21 +383,7 @@ errorsFromStatus status =
 
 
 type alias RegisterJsonResponse =
-    JsonResponse ErrorData SuccessfulResponse
-
-
-type alias SuccessfulResponse =
-    { collectionId : String
-    , collectionName : String
-    , created : String
-    , emailVisibility : Bool
-    , firstName : String
-    , id : String
-    , lastName : String
-    , updated : String
-    , username : String
-    , verified : Bool
-    }
+    JsonResponse ErrorData UserResponse
 
 
 type alias ErrorData =
@@ -398,21 +393,6 @@ type alias ErrorData =
     , firstName : Maybe ErrorMessage
     , lastName : Maybe ErrorMessage
     }
-
-
-decodeSuccessfulResponse : Decoder SuccessfulResponse
-decodeSuccessfulResponse =
-    Decode.succeed SuccessfulResponse
-        |> required "collectionId" string
-        |> required "collectionName" string
-        |> required "created" string
-        |> required "emailVisibility" bool
-        |> required "firstName" string
-        |> required "id" string
-        |> required "lastName" string
-        |> required "updated" string
-        |> required "username" string
-        |> required "verified" bool
 
 
 decodeErrorData : Decoder ErrorData
@@ -427,30 +407,6 @@ decodeErrorData =
         |> optional "passwordConfirm" (Decode.map Just decoder) Nothing
         |> optional "firstName" (Decode.map Just decoder) Nothing
         |> optional "lastName" (Decode.map Just decoder) Nothing
-
-
-stringToJson : String -> RegisterJsonResponse
-stringToJson jsonString =
-    case Decode.decodeString decodeSuccessfulResponse jsonString of
-        Ok res ->
-            JsonSuccess res
-
-        Err _ ->
-            stringToJson_ jsonString
-
-
-stringToJson_ : String -> RegisterJsonResponse
-stringToJson_ jsonString =
-    let
-        decoder =
-            Response.decodeErrorResponse decodeErrorData
-    in
-    case Decode.decodeString decoder jsonString of
-        Ok res ->
-            JsonError res
-
-        Err err ->
-            JsonNone err
 
 
 encodeForm : Model -> Encode.Value

@@ -3,6 +3,14 @@ module Page.Login exposing (Model, Msg, init, view)
 import Html exposing (Html, div, form, span, text)
 import Html.Attributes exposing (class, name, type_)
 import Input exposing (viewCheckbox, viewInput)
+import Json.Decode as Decode exposing (Decoder)
+import Json.Decode.Pipeline exposing (optional)
+import Response
+    exposing
+        ( ErrorMessage
+        , JsonResponse(..)
+        , UserResponse
+        )
 import Session exposing (Session)
 import View
     exposing
@@ -107,3 +115,34 @@ type Msg
     = Login
     | EmailChanged String
     | PasswordChanged String
+
+
+
+-- JSON
+
+
+type alias LoginJsonResponse =
+    JsonResponse ErrorData SuccessfulResponse
+
+
+type alias SuccessfulResponse =
+    { token : String
+    , record : UserResponse
+    }
+
+
+type alias ErrorData =
+    { identity : Maybe ErrorMessage
+    , password : Maybe ErrorMessage
+    }
+
+
+decodeErrorData : Decoder ErrorData
+decodeErrorData =
+    let
+        decoder =
+            Response.decodeErrorMessage
+    in
+    Decode.succeed ErrorData
+        |> optional "identity" (Decode.map Just decoder) Nothing
+        |> optional "password" (Decode.map Just decoder) Nothing

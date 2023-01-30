@@ -4,15 +4,18 @@ module Response exposing
     , ErrorResponse
     , JsonResponse(..)
     , ResponseResult
+    , UserResponse
     , decodeErrorMessage
     , decodeErrorResponse
+    , decodeUserResponse
     , expectStringDetailed
     , prependMaybeError
+    , stringToJson
     , unknownError
     )
 
 import Http exposing (Expect, Metadata, Response)
-import Json.Decode as Decode exposing (Decoder, Error, int, string)
+import Json.Decode as Decode exposing (Decoder, Error, bool, int, string)
 import Json.Decode.Pipeline exposing (required)
 import Request exposing (Status(..))
 
@@ -64,6 +67,35 @@ convertResponseString httpResponse =
 -- JSON
 
 
+type alias UserResponse =
+    { collectionId : String
+    , collectionName : String
+    , created : String
+    , emailVisibility : Bool
+    , firstName : String
+    , id : String
+    , lastName : String
+    , updated : String
+    , username : String
+    , verified : Bool
+    }
+
+
+decodeUserResponse : Decoder UserResponse
+decodeUserResponse =
+    Decode.succeed UserResponse
+        |> required "collectionId" string
+        |> required "collectionName" string
+        |> required "created" string
+        |> required "emailVisibility" bool
+        |> required "firstName" string
+        |> required "id" string
+        |> required "lastName" string
+        |> required "updated" string
+        |> required "username" string
+        |> required "verified" bool
+
+
 type JsonResponse errorData successfulResponse
     = JsonError (ErrorResponse errorData)
     | JsonSuccess successfulResponse
@@ -113,3 +145,27 @@ prependMaybeError maybe list =
 
         Nothing ->
             list
+
+
+stringToJson : Decoder err -> Decoder success -> String -> JsonResponse err success
+stringToJson decoderErr decoderSuccess jsonString =
+    case Decode.decodeString decoderSuccess jsonString of
+        Ok res ->
+            JsonSuccess res
+
+        Err _ ->
+            stringToJson_ decoderErr jsonString
+
+
+stringToJson_ : Decoder err -> String -> JsonResponse err success
+stringToJson_ decodeErr jsonString =
+    let
+        decoder =
+            decodeErrorResponse decodeErr
+    in
+    case Decode.decodeString decoder jsonString of
+        Ok res ->
+            JsonError res
+
+        Err err ->
+            JsonNone err
