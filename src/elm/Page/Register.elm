@@ -1,13 +1,11 @@
 module Page.Register exposing (Model, Msg, init, update, view)
 
-import Helper
-import Html exposing (Attribute, Html, div, form, span, text)
+import Html exposing (Html, div, form, span, text)
 import Html.Attributes exposing (class, disabled, name, type_)
 import Http
 import Input exposing (Input(..), viewCheckbox, viewInput)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Pipeline exposing (optional)
-import Json.Encode as Encode
 import Request exposing (Status(..))
 import Response
     exposing
@@ -125,7 +123,17 @@ updateWithError : ErrorDetailed -> Model -> ( Model, Cmd Msg )
 updateWithError err model =
     case err of
         BadStatus _ res ->
-            ( { model | response = Response (stringToJson res) }
+            ( let
+                response =
+                    Response (stringToJson res)
+              in
+              { model
+                | response = response
+                , email = responseToInput (\data -> data.email) model.email response
+                , password = responseToInput (\data -> data.password) model.password response
+                , firstName = responseToInput (\data -> data.firstName) model.firstName response
+                , lastName = responseToInput (\data -> data.lastName) model.lastName response
+              }
             , View.delay 2500 ResetErrorResponse
             )
 
@@ -166,7 +174,7 @@ viewForm model =
         , viewEmailInput model EmailChanged
         , viewPasswordInput model PasswordChanged
         , viewAdditional
-        , viewRegisterButton model
+        , viewRegisterButton
         , viewAlternative
         ]
 
@@ -175,15 +183,11 @@ viewNameInput : Model -> Html Msg
 viewNameInput model =
     div [ class "flex gap-6 mb-6" ]
         [ viewInput
-            ([ name "firstName", Input.inputBorder model.firstName ]
-                ++ (statusToMaybeError model.response |> invalidFirstName)
-            )
+            [ name "firstName", Input.inputBorder model.firstName ]
             "First name"
             FirstNameChanged
         , viewInput
-            ([ name "lastName", Input.inputBorder model.lastName ]
-                ++ (statusToMaybeError model.response |> invalidLastName)
-            )
+            [ name "lastName", Input.inputBorder model.lastName ]
             "Last name"
             LastNameChanged
         ]
@@ -192,13 +196,11 @@ viewNameInput model =
 viewEmailInput : Model -> (String -> msg) -> Html msg
 viewEmailInput model msg =
     viewInput
-        ([ class "mb-6"
-         , type_ "email"
-         , name "email"
-         , Input.inputBorder model.email
-         ]
-            ++ (statusToMaybeError model.response |> invalidEmail)
-        )
+        [ class "mb-6"
+        , type_ "email"
+        , name "email"
+        , Input.inputBorder model.email
+        ]
         "Email"
         msg
 
@@ -206,13 +208,11 @@ viewEmailInput model msg =
 viewPasswordInput : Model -> (String -> msg) -> Html msg
 viewPasswordInput model msg =
     viewInput
-        ([ class "mb-6"
-         , type_ "password"
-         , name "password"
-         , Input.inputBorder model.password
-         ]
-            ++ (statusToMaybeError model.response |> invalidPassword)
-        )
+        [ class "mb-6"
+        , type_ "password"
+        , name "password"
+        , Input.inputBorder model.password
+        ]
         "Password"
         msg
 
@@ -224,18 +224,10 @@ viewAdditional =
         ]
 
 
-viewRegisterButton : Model -> Html Msg
-viewRegisterButton model =
-    let
-        disabledAttr =
-            if submitActive model then
-                []
-
-            else
-                [ disabled True ]
-    in
+viewRegisterButton : Html Msg
+viewRegisterButton =
     viewButtonImage
-        (class "w-full mb-4" :: disabledAttr)
+        [ class "w-full mb-4" ]
         Register
         "/static/img/signup.svg"
 
@@ -257,49 +249,18 @@ register : Model -> Cmd Msg
 register model =
     Http.post
         { url = joinUrl (apiUrl model.session) "/api/collections/users/records"
-        , body = Http.jsonBody (encodeForm model)
+        , body =
+            Http.jsonBody
+                (Input.encodeInput
+                    [ ( "email", model.email )
+                    , ( "password", model.password )
+                    , ( "passwordConfirm", model.passwordConfirm )
+                    , ( "firstName", model.firstName )
+                    , ( "lastName", model.lastName )
+                    ]
+                )
         , expect = Response.expectStringDetailed GotRegisterResponse
         }
-
-
-invalidFirstName : Maybe ErrorData -> List (Attribute msg)
-invalidFirstName errorData =
-    case errorData of
-        Just data ->
-            Helper.maybeAttribute data.firstName [ class "border-red-500" ]
-
-        Nothing ->
-            [ class "border-grey-3" ]
-
-
-invalidLastName : Maybe ErrorData -> List (Attribute msg)
-invalidLastName errorData =
-    case errorData of
-        Just data ->
-            Helper.maybeAttribute data.lastName [ class "border-red-500" ]
-
-        Nothing ->
-            [ class "border-grey-3" ]
-
-
-invalidEmail : Maybe ErrorData -> List (Attribute msg)
-invalidEmail errorData =
-    case errorData of
-        Just data ->
-            Helper.maybeAttribute data.email [ class "border-red-500" ]
-
-        Nothing ->
-            [ class "border-grey-3" ]
-
-
-invalidPassword : Maybe ErrorData -> List (Attribute msg)
-invalidPassword errorData =
-    case errorData of
-        Just data ->
-            Helper.maybeAttribute data.password [ class "border-red-500" ]
-
-        Nothing ->
-            [ class "border-grey-3" ]
 
 
 checkPassword : String -> Bool
@@ -310,15 +271,6 @@ checkPassword password =
 checkEmail : String -> Bool
 checkEmail email =
     String.contains "@" email && String.contains "." email
-
-
-submitActive : Model -> Bool
-submitActive model =
-    Input.inputToBool model.firstName
-        && Input.inputToBool model.lastName
-        && Input.inputToBool model.email
-        && Input.inputToBool model.password
-        && Input.inputToBool model.passwordConfirm
 
 
 stringToJson : String -> RegisterJsonResponse
@@ -378,6 +330,21 @@ errorsFromStatus status =
             []
 
 
+responseToInput : (ErrorData -> Maybe ErrorMessage) -> Input -> Status RegisterJsonResponse -> Input
+responseToInput errToMessage currentInput status =
+    case statusToMaybeError status of
+        Just err ->
+            case errToMessage err of
+                Just _ ->
+                    Invalid (Input.stringFromInput currentInput)
+
+                Nothing ->
+                    currentInput
+
+        Nothing ->
+            currentInput
+
+
 
 -- JSON
 
@@ -407,24 +374,3 @@ decodeErrorData =
         |> optional "passwordConfirm" (Decode.map Just decoder) Nothing
         |> optional "firstName" (Decode.map Just decoder) Nothing
         |> optional "lastName" (Decode.map Just decoder) Nothing
-
-
-encodeForm : Model -> Encode.Value
-encodeForm model =
-    Encode.object
-        [ ( "email"
-          , Encode.string <| Input.stringFromInput model.email
-          )
-        , ( "password"
-          , Encode.string <| Input.stringFromInput model.password
-          )
-        , ( "passwordConfirm"
-          , Encode.string <| Input.stringFromInput model.passwordConfirm
-          )
-        , ( "firstName"
-          , Encode.string <| Input.stringFromInput model.firstName
-          )
-        , ( "lastName"
-          , Encode.string <| Input.stringFromInput model.lastName
-          )
-        ]

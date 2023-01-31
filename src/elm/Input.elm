@@ -1,7 +1,8 @@
 module Input exposing
     ( Input(..)
+    , canSubmit
+    , encodeInput
     , inputBorder
-    , inputToBool
     , stringFromInput
     , valueToInput
     , viewCheckbox
@@ -11,6 +12,7 @@ module Input exposing
 import Html exposing (Attribute, Html, div, img, input, text)
 import Html.Attributes exposing (class, src, type_)
 import Html.Events exposing (onInput)
+import Json.Encode as Encode
 
 
 type Input
@@ -68,6 +70,16 @@ inputBorder input =
 
         _ ->
             class "border-grey-3"
+
+
+canSubmit : List Input -> Bool
+canSubmit inputs =
+    List.all inputToBool inputs
+
+
+encodeInput : List ( String, Input ) -> Encode.Value
+encodeInput encodingData =
+    Encode.object (List.map (\( key, value ) -> ( key, Encode.string <| stringFromInput value )) encodingData)
 
 
 
