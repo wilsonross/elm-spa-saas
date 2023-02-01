@@ -17,7 +17,7 @@ import Html.Events exposing (onClick)
 import Http
 import Json.Decode as Decode exposing (Decoder, at, int, list, string)
 import Json.Decode.Pipeline exposing (custom, optional, required)
-import Session exposing (apiUrl, joinUrl)
+import Request
 import View exposing (Link, viewButtonImage, viewLink, viewLinkImage, viewLogo)
 
 
@@ -47,7 +47,7 @@ init apiUrl currentPath =
       , path = currentPath
       }
     , Http.get
-        { url = joinUrl apiUrl "/api/collections/links/records"
+        { url = Request.joinUrl apiUrl "/api/collections/links/records"
         , expect = Http.expectJson GotPaginatedResponse decodePaginatedResponse
         }
     )

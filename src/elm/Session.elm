@@ -3,7 +3,6 @@ module Session exposing
     , Session(..)
     , apiUrl
     , init
-    , joinUrl
     , navKey
     , pathFromSession
     , updateSessionPath
@@ -51,18 +50,6 @@ apiUrl session =
     case session of
         Guest guest ->
             guest.flags.apiUrl
-
-
-joinUrl : String -> String -> String
-joinUrl url path =
-    if String.endsWith "/" url && String.startsWith "/" path then
-        String.slice 0 (String.length url - 1) url ++ path
-
-    else if String.endsWith "/" url == False && String.startsWith "/" path == False then
-        url ++ "/" ++ path
-
-    else
-        url ++ path
 
 
 updateSessionPath : Url.Url -> Session -> Session

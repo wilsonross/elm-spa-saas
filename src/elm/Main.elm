@@ -86,8 +86,9 @@ update msg model =
             Home.update subMsg home
                 |> updateWith Home GotHomeMsg
 
-        ( GotLoginMsg _, Login login ) ->
-            ( Login login, Cmd.none )
+        ( GotLoginMsg subMsg, Login login ) ->
+            Login.update subMsg login
+                |> updateWith Login GotLoginMsg
 
         ( GotRegisterMsg subMsg, Register register ) ->
             Register.update subMsg register

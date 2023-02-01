@@ -1,21 +1,27 @@
-module Page.Login exposing (Model, Msg, init, view)
+module Page.Login exposing (Model, Msg, init, update, view)
 
 import Html exposing (Html, div, form, span, text)
 import Html.Attributes exposing (class, name, type_)
-import Input exposing (viewCheckbox, viewInput)
-import Json.Decode as Decode exposing (Decoder)
-import Json.Decode.Pipeline exposing (optional)
+import Http
+import Input exposing (Input(..), viewCheckbox, viewStatefulInput)
+import Json.Decode as Decode exposing (Decoder, string)
+import Json.Decode.Pipeline exposing (optional, required)
+import Request exposing (Status(..))
 import Response
     exposing
-        ( ErrorMessage
+        ( ErrorDetailed(..)
+        , ErrorMessage
         , JsonResponse(..)
+        , ResponseResult
         , UserResponse
         )
 import Session exposing (Session)
 import View
     exposing
-        ( viewAuthLogo
+        ( viewAlternative
+        , viewAuthLogo
         , viewButtonImage
+        , viewErrors
         , viewLink
         , viewTitle
         )
@@ -27,14 +33,183 @@ import View
 
 type alias Model =
     { session : Session
+    , response : Status LoginJsonResponse
+    , identity : Input
+    , password : Input
     }
 
 
 init : Session -> ( Model, Cmd Msg )
 init session =
-    ( { session = session }
+    ( { session = session
+      , response = None
+      , identity = Empty
+      , password = Empty
+      }
     , Cmd.none
     )
+
+
+
+-- UPDATE
+
+
+type Msg
+    = GotLoginResponse ResponseResult
+    | Login
+    | IdentityChanged String
+    | PasswordChanged String
+    | ResetErrorResponse
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        GotLoginResponse res ->
+            updateWithResponse res model
+
+        Login ->
+            ( { model | response = Loading }
+            , login model
+            )
+
+        IdentityChanged identity ->
+            ( { model | identity = Input.valueToInput identity (\_ -> True) }
+            , Cmd.none
+            )
+
+        PasswordChanged password ->
+            ( { model | password = Input.valueToInput password (\_ -> True) }
+            , Cmd.none
+            )
+
+        ResetErrorResponse ->
+            ( { model | response = None }, Cmd.none )
+
+
+updateWithResponse : ResponseResult -> Model -> ( Model, Cmd Msg )
+updateWithResponse result model =
+    case result of
+        Ok ( _, res ) ->
+            ( { model | response = Response (stringToJson res) }
+            , Cmd.none
+            )
+
+        Err err ->
+            updateWithError err model
+
+
+updateWithError : ErrorDetailed -> Model -> ( Model, Cmd Msg )
+updateWithError err model =
+    case err of
+        BadStatus _ res ->
+            ( let
+                response =
+                    Response (stringToJson res)
+              in
+              { model
+                | response = response
+                , identity = responseToInput (\data -> data.identity) model.identity response
+                , password = responseToInput (\data -> data.password) model.password response
+              }
+            , View.delay 2500 ResetErrorResponse
+            )
+
+        _ ->
+            ( { model | response = Failure }
+            , View.delay 2500 ResetErrorResponse
+            )
+
+
+
+-- HELPERS
+
+
+login : Model -> Cmd Msg
+login model =
+    Http.post
+        { url =
+            Request.joinUrl
+                (Session.apiUrl model.session)
+                "/api/collections/users/auth-with-password"
+        , body =
+            Http.jsonBody
+                (Input.encodeInput
+                    [ ( "identity", model.identity )
+                    , ( "password", model.password )
+                    ]
+                )
+        , expect = Response.expectStringDetailed GotLoginResponse
+        }
+
+
+stringToJson : String -> LoginJsonResponse
+stringToJson str =
+    Response.stringToJson
+        decodeErrorData
+        decodeSuccessfulResponse
+        str
+
+
+
+-- ERROR HELPERS
+
+
+createErrorList : List ErrorMessage -> ErrorData -> List ErrorMessage
+createErrorList list errorData =
+    Response.prependMaybeError errorData.identity list
+        |> Response.prependMaybeError errorData.password
+
+
+statusToMaybeError : Status LoginJsonResponse -> Maybe ErrorData
+statusToMaybeError status =
+    case status of
+        Response jsonResponse ->
+            case jsonResponse of
+                JsonError err ->
+                    Just err.data
+
+                _ ->
+                    Nothing
+
+        _ ->
+            Nothing
+
+
+errorsFromStatus : Status LoginJsonResponse -> List ErrorMessage
+errorsFromStatus status =
+    case status of
+        Failure ->
+            [ Response.unknownError ]
+
+        Response jsonResponse ->
+            case jsonResponse of
+                JsonError err ->
+                    createErrorList [] err.data
+
+                JsonSuccess _ ->
+                    []
+
+                JsonNone _ ->
+                    [ Response.unknownError ]
+
+        _ ->
+            []
+
+
+responseToInput : (ErrorData -> Maybe ErrorMessage) -> Input -> Status LoginJsonResponse -> Input
+responseToInput errToMessage currentInput status =
+    case statusToMaybeError status of
+        Just err ->
+            case errToMessage err of
+                Just _ ->
+                    Invalid (Input.stringFromInput currentInput)
+
+                Nothing ->
+                    currentInput
+
+        Nothing ->
+            currentInput
 
 
 
@@ -42,19 +217,21 @@ init session =
 
 
 view : Model -> { title : String, content : Html Msg }
-view _ =
+view model =
     { title = "Stamp | Login"
     , content =
         div
             [ class <|
                 "flex justify-center items-center h-screen rounded-md px-4"
             ]
-            [ viewForm ]
+            [ viewForm model
+            , errorsFromStatus model.response |> viewErrors
+            ]
     }
 
 
-viewForm : Html Msg
-viewForm =
+viewForm : Model -> Html Msg
+viewForm model =
     form
         [ class <|
             "bg-white max-w-md w-full shadow-portal px-[1.25rem] pt-[3.125rem]"
@@ -62,11 +239,18 @@ viewForm =
         ]
         [ viewAuthLogo
         , viewTitle "Log in"
-        , viewEmailInput EmailChanged
-        , viewPasswordInput PasswordChanged
+        , viewStatefulInput
+            model.identity
+            IdentityChanged
+            [ class "mb-6", type_ "email", name "email" ]
+            "Email"
+        , viewStatefulInput model.password
+            PasswordChanged
+            [ class "mb-6", type_ "password", name "password" ]
+            "Password"
         , viewAdditional
         , viewLoginButton
-        , viewAlternative
+        , viewAlternative "Don't have an account?" "Sign up" "now" "/register"
         ]
 
 
@@ -85,38 +269,6 @@ viewLoginButton =
     viewButtonImage [ class "w-full mb-4" ] Login "/static/img/signin.svg"
 
 
-viewAlternative : Html msg
-viewAlternative =
-    div [ class "text-xs leading-[1.125rem] text-center" ]
-        [ span [] [ text "Don't have an account? " ]
-        , viewLink [ class "text-turq" ] "/register" "Sign up"
-        , span [] [ text " now" ]
-        ]
-
-
-viewEmailInput : (String -> msg) -> Html msg
-viewEmailInput msg =
-    viewInput [ class "mb-6", type_ "email", name "email" ] "Email" msg
-
-
-viewPasswordInput : (String -> msg) -> Html msg
-viewPasswordInput msg =
-    viewInput
-        [ class "mb-6", type_ "password", name "password" ]
-        "Password"
-        msg
-
-
-
--- UPDATE
-
-
-type Msg
-    = Login
-    | EmailChanged String
-    | PasswordChanged String
-
-
 
 -- JSON
 
@@ -126,8 +278,8 @@ type alias LoginJsonResponse =
 
 
 type alias SuccessfulResponse =
-    { token : String
-    , record : UserResponse
+    { record : UserResponse
+    , token : String
     }
 
 
@@ -135,6 +287,13 @@ type alias ErrorData =
     { identity : Maybe ErrorMessage
     , password : Maybe ErrorMessage
     }
+
+
+decodeSuccessfulResponse : Decoder SuccessfulResponse
+decodeSuccessfulResponse =
+    Decode.succeed SuccessfulResponse
+        |> required "record" Response.decodeUserResponse
+        |> required "token" string
 
 
 decodeErrorData : Decoder ErrorData

@@ -7,10 +7,11 @@ module Input exposing
     , valueToInput
     , viewCheckbox
     , viewInput
+    , viewStatefulInput
     )
 
 import Html exposing (Attribute, Html, div, img, input, text)
-import Html.Attributes exposing (class, src, type_)
+import Html.Attributes exposing (class, name, src, type_)
 import Html.Events exposing (onInput)
 import Json.Encode as Encode
 
@@ -79,7 +80,11 @@ canSubmit inputs =
 
 encodeInput : List ( String, Input ) -> Encode.Value
 encodeInput encodingData =
-    Encode.object (List.map (\( key, value ) -> ( key, Encode.string <| stringFromInput value )) encodingData)
+    Encode.object
+        (List.map
+            (\( key, value ) -> ( key, Encode.string <| stringFromInput value ))
+            encodingData
+        )
 
 
 
@@ -99,6 +104,11 @@ viewInput attr placeholder msg =
                ]
         )
         []
+
+
+viewStatefulInput : Input -> (String -> msg) -> List (Attribute msg) -> String -> Html msg
+viewStatefulInput input msg attr placeholder =
+    viewInput (inputBorder input :: attr) placeholder msg
 
 
 viewCheckbox : List (Attribute msg) -> Bool -> String -> String -> Html msg

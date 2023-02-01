@@ -1,9 +1,14 @@
 module Page.Register exposing (Model, Msg, init, update, view)
 
-import Html exposing (Html, div, form, span, text)
-import Html.Attributes exposing (class, disabled, name, type_)
+import Html exposing (Html, div, form)
+import Html.Attributes exposing (class, name, type_)
 import Http
-import Input exposing (Input(..), viewCheckbox, viewInput)
+import Input
+    exposing
+        ( Input(..)
+        , viewCheckbox
+        , viewStatefulInput
+        )
 import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Pipeline exposing (optional)
 import Request exposing (Status(..))
@@ -15,13 +20,13 @@ import Response
         , ResponseResult
         , UserResponse
         )
-import Session exposing (Session, apiUrl, joinUrl)
+import Session exposing (Session)
 import View
     exposing
-        ( viewAuthLogo
+        ( viewAlternative
+        , viewAuthLogo
         , viewButtonImage
         , viewErrors
-        , viewLink
         , viewTitle
         )
 
@@ -171,50 +176,36 @@ viewForm model =
         [ viewAuthLogo
         , viewTitle "Sign Up"
         , viewNameInput model
-        , viewEmailInput model EmailChanged
-        , viewPasswordInput model PasswordChanged
+        , viewStatefulInput
+            model.email
+            EmailChanged
+            [ class "mb-6", type_ "email", name "email" ]
+            "Email"
+        , viewStatefulInput
+            model.password
+            PasswordChanged
+            [ class "mb-6", type_ "password", name "password" ]
+            "Password"
         , viewAdditional
         , viewRegisterButton
-        , viewAlternative
+        , viewAlternative "Already have an account?" "Sign in" "now" "/login"
         ]
 
 
 viewNameInput : Model -> Html Msg
 viewNameInput model =
     div [ class "flex gap-6 mb-6" ]
-        [ viewInput
-            [ name "firstName", Input.inputBorder model.firstName ]
-            "First name"
+        [ viewStatefulInput
+            model.firstName
             FirstNameChanged
-        , viewInput
-            [ name "lastName", Input.inputBorder model.lastName ]
-            "Last name"
+            [ type_ "text", name "firstName" ]
+            "First Name"
+        , viewStatefulInput
+            model.lastName
             LastNameChanged
+            [ type_ "text", name "lastName" ]
+            "Last Name"
         ]
-
-
-viewEmailInput : Model -> (String -> msg) -> Html msg
-viewEmailInput model msg =
-    viewInput
-        [ class "mb-6"
-        , type_ "email"
-        , name "email"
-        , Input.inputBorder model.email
-        ]
-        "Email"
-        msg
-
-
-viewPasswordInput : Model -> (String -> msg) -> Html msg
-viewPasswordInput model msg =
-    viewInput
-        [ class "mb-6"
-        , type_ "password"
-        , name "password"
-        , Input.inputBorder model.password
-        ]
-        "Password"
-        msg
 
 
 viewAdditional : Html msg
@@ -226,19 +217,7 @@ viewAdditional =
 
 viewRegisterButton : Html Msg
 viewRegisterButton =
-    viewButtonImage
-        [ class "w-full mb-4" ]
-        Register
-        "/static/img/signup.svg"
-
-
-viewAlternative : Html msg
-viewAlternative =
-    div [ class "text-xs leading-[1.125rem] text-center" ]
-        [ span [] [ text "Already have an account? " ]
-        , viewLink [ class "text-turq" ] "/login" "Sign in"
-        , span [] [ text " now" ]
-        ]
+    viewButtonImage [ class "w-full mb-4" ] Register "/static/img/signup.svg"
 
 
 
@@ -248,7 +227,9 @@ viewAlternative =
 register : Model -> Cmd Msg
 register model =
     Http.post
-        { url = joinUrl (apiUrl model.session) "/api/collections/users/records"
+        { url =
+            Request.joinUrl (Session.apiUrl model.session)
+                "/api/collections/users/records"
         , body =
             Http.jsonBody
                 (Input.encodeInput

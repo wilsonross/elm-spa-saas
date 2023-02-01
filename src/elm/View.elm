@@ -1,6 +1,7 @@
 module View exposing
     ( Link
     , delay
+    , viewAlternative
     , viewAuthLogo
     , viewButtonImage
     , viewErrors
@@ -134,6 +135,15 @@ viewTitle : String -> Html msg
 viewTitle title =
     h1 [ class "text-sm font-bold mb-[0.563rem]" ]
         [ text title
+        ]
+
+
+viewAlternative : String -> String -> String -> String -> Html msg
+viewAlternative prefix focus suffix href =
+    div [ class "text-xs leading-[1.125rem] text-center" ]
+        [ span [] [ text (prefix ++ " ") ]
+        , viewLink [ class "text-turq" ] href focus
+        , span [] [ text (" " ++ suffix) ]
         ]
 
 
