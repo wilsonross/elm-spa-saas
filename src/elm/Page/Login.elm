@@ -1,6 +1,6 @@
 module Page.Login exposing (Model, Msg, init, update, view)
 
-import Html exposing (Html, div, form, span, text)
+import Html exposing (Html, div, form)
 import Html.Attributes exposing (class, name, type_)
 import Http
 import Input exposing (Input(..), viewCheckbox, viewStatefulInput)

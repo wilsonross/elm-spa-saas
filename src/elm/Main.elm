@@ -2,6 +2,7 @@ module Main exposing (main)
 
 import Browser exposing (Document)
 import Browser.Navigation as Nav
+import Cookie exposing (Cookie)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Page
@@ -57,6 +58,7 @@ init flags url key =
 type Msg
     = LinkClicked Browser.UrlRequest
     | UrlChanged Url.Url
+    | CookieMsg Cookie.Msg
     | GotHomeMsg Home.Msg
     | GotLoginMsg Login.Msg
     | GotRegisterMsg Register.Msg
@@ -81,6 +83,10 @@ update msg model =
             changeRouteTo
                 url
                 model
+
+        ( CookieMsg subMsg, _ ) ->
+            Cookie.update subMsg
+                |> updateWithCookie model
 
         ( GotHomeMsg subMsg, Home home ) ->
             Home.update subMsg home
@@ -139,6 +145,16 @@ updateWith toModel toMsg ( subModel, subCmd ) =
     ( toModel subModel
     , Cmd.map toMsg subCmd
     )
+
+
+updateWithCookie : Model -> ( Maybe Cookie, Cmd Cookie.Msg ) -> ( Model, Cmd Msg )
+updateWithCookie model ( maybeCookie, subCmd ) =
+    case maybeCookie of
+        Just cookie ->
+            ( model, Cmd.none )
+
+        Nothing ->
+            ( model, Cmd.map CookieMsg subCmd )
 
 
 
