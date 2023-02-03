@@ -9,6 +9,7 @@ module Session exposing
     )
 
 import Browser.Navigation as Nav
+import Cookie exposing (Cookie)
 import Url
 
 
@@ -16,22 +17,31 @@ import Url
 -- MODEL
 
 
+type alias Flags =
+    { apiUrl : String
+    }
+
+
+type alias GuestSession =
+    { key : Nav.Key
+    , flags : Flags
+    , path : String
+    , cookies : List Cookie
+    }
+
+
 type Session
-    = Guest { key : Nav.Key, flags : Flags, path : String }
+    = Guest GuestSession
 
 
 init : Flags -> Nav.Key -> String -> Session
 init flags key path =
-    Guest { key = key, flags = flags, path = path }
-
-
-
--- FLAGS
-
-
-type alias Flags =
-    { apiUrl : String
-    }
+    Guest
+        { key = key
+        , flags = flags
+        , path = path
+        , cookies = []
+        }
 
 
 
