@@ -147,14 +147,9 @@ updateWith toModel toMsg ( subModel, subCmd ) =
     )
 
 
-updateWithCookie : Model -> ( Maybe Cookie, Cmd Cookie.Msg ) -> ( Model, Cmd Msg )
-updateWithCookie model ( maybeCookie, subCmd ) =
-    case maybeCookie of
-        Just cookie ->
-            ( model, Cmd.none )
-
-        Nothing ->
-            ( model, Cmd.map CookieMsg subCmd )
+updateWithCookie : Model -> ( Cookie, Cmd Cookie.Msg ) -> ( Model, Cmd Msg )
+updateWithCookie model ( cookie, subCmd ) =
+    ( model, Cmd.map CookieMsg subCmd )
 
 
 
@@ -163,7 +158,7 @@ updateWithCookie model ( maybeCookie, subCmd ) =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Sub.none
+    Sub.map CookieMsg Cookie.subscriptions
 
 
 

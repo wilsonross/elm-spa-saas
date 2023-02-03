@@ -1,4 +1,4 @@
-port module Cookie exposing (Cookie, Msg, update)
+port module Cookie exposing (Cookie, Msg, subscriptions, update)
 
 -- MODEL
 
@@ -30,17 +30,17 @@ type Msg
     | RecieveCookie Cookie
 
 
-update : Msg -> ( Maybe Cookie, Cmd Msg )
+update : Msg -> ( Cookie, Cmd Msg )
 update msg =
     case msg of
         SetCookie ( key, value ) daysUntilExpiry ->
-            ( Nothing, setCookie ( key, value, daysUntilExpiry ) )
+            ( ( key, value ), setCookie ( key, value, daysUntilExpiry ) )
 
         GetCookie key ->
-            ( Nothing, getCookie key )
+            ( ( key, "" ), getCookie key )
 
         RecieveCookie cookie ->
-            ( Just cookie, Cmd.none )
+            ( cookie, Cmd.none )
 
 
 
