@@ -80,13 +80,11 @@ update msg model =
                     ( model, Nav.load href )
 
         ( UrlChanged url, _ ) ->
-            changeRouteTo
-                url
-                model
+            changeRouteTo url model
 
         ( CookieMsg subMsg, _ ) ->
             Cookie.update subMsg
-                |> updateWithCookie model
+                |> updateWithCookie model CookieMsg
 
         ( GotHomeMsg subMsg, Home home ) ->
             Home.update subMsg home
@@ -115,6 +113,19 @@ toSession model =
 
         Register register ->
             register.session
+
+
+updateModelSession : Model -> Session -> Model
+updateModelSession model session =
+    case model of
+        Home home ->
+            Home { home | session = session }
+
+        Login login ->
+            Login { login | session = session }
+
+        Register register ->
+            Register { register | session = session }
 
 
 changeRouteTo : Url.Url -> Model -> ( Model, Cmd Msg )
@@ -147,9 +158,13 @@ updateWith toModel toMsg ( subModel, subCmd ) =
     )
 
 
-updateWithCookie : Model -> ( Cookie, Cmd Cookie.Msg ) -> ( Model, Cmd Msg )
-updateWithCookie model ( cookie, subCmd ) =
-    ( model, Cmd.map CookieMsg subCmd )
+updateWithCookie : Model -> (subMsg -> Msg) -> ( Cookie, Cmd subMsg ) -> ( Model, Cmd Msg )
+updateWithCookie model toMsg ( cookie, subCmd ) =
+    ( toSession model
+        |> Session.updateSessionCookies cookie
+        |> updateModelSession model
+    , Cmd.map toMsg subCmd
+    )
 
 
 

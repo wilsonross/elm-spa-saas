@@ -5,6 +5,7 @@ module Session exposing
     , init
     , navKey
     , pathFromSession
+    , updateSessionCookies
     , updateSessionPath
     )
 
@@ -60,6 +61,14 @@ apiUrl session =
     case session of
         Guest guest ->
             guest.flags.apiUrl
+
+
+updateSessionCookies : Cookie -> Session -> Session
+updateSessionCookies cookie session =
+    case session of
+        Guest guest ->
+            Guest
+                { guest | cookies = cookie :: guest.cookies }
 
 
 updateSessionPath : Url.Url -> Session -> Session
