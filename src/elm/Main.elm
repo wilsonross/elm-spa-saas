@@ -44,7 +44,7 @@ init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url key =
     let
         ( home, _ ) =
-            Home.init (Session.init flags key url.path)
+            Home.init (Session.initGuest flags key url.path)
     in
     changeRouteTo
         url
