@@ -10,7 +10,7 @@ module Session exposing
     )
 
 import Browser.Navigation as Nav
-import Cookie exposing (Cookie)
+import Port exposing (Cookie)
 import Url
 
 

@@ -6,6 +6,7 @@ import Http
 import Input exposing (Input(..), viewCheckbox, viewStatefulInput)
 import Json.Decode as Decode exposing (Decoder, string)
 import Json.Decode.Pipeline exposing (optional, required)
+import Port
 import Request exposing (Status(..))
 import Response
     exposing
@@ -92,7 +93,12 @@ updateWithResponse result model =
     case result of
         Ok ( _, res ) ->
             ( { model | response = Response (stringToJson res) }
-            , Cmd.none
+            , Port.setCookie
+                ( "session"
+                , Response (stringToJson res)
+                    |> responseToToken
+                , 30
+                )
             )
 
         Err err ->
@@ -210,6 +216,21 @@ responseToInput errToMessage currentInput status =
 
         Nothing ->
             currentInput
+
+
+responseToToken : Status LoginJsonResponse -> String
+responseToToken status =
+    case status of
+        Response jsonResponse ->
+            case jsonResponse of
+                JsonSuccess res ->
+                    res.token
+
+                _ ->
+                    ""
+
+        _ ->
+            ""
 
 
 

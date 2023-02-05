@@ -1,4 +1,12 @@
-port module Cookie exposing (Cookie, Msg, subscriptions, update)
+port module Port exposing
+    ( Cookie
+    , Msg
+    , getCookie
+    , recieveCookie
+    , setCookie
+    , subscriptions
+    , update
+    )
 
 -- MODEL
 
@@ -25,20 +33,12 @@ port recieveCookie : (( String, String ) -> msg) -> Sub msg
 
 
 type Msg
-    = SetCookie Cookie Int
-    | GetCookie String
-    | RecieveCookie Cookie
+    = RecieveCookie Cookie
 
 
 update : Msg -> ( Cookie, Cmd Msg )
 update msg =
     case msg of
-        SetCookie ( key, value ) daysUntilExpiry ->
-            ( ( key, value ), setCookie ( key, value, daysUntilExpiry ) )
-
-        GetCookie key ->
-            ( ( key, "" ), getCookie key )
-
         RecieveCookie cookie ->
             ( cookie, Cmd.none )
 

@@ -2,13 +2,13 @@ module Main exposing (main)
 
 import Browser exposing (Document)
 import Browser.Navigation as Nav
-import Cookie exposing (Cookie)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Page
 import Page.Home as Home
 import Page.Login as Login
 import Page.Register as Register
+import Port exposing (Cookie)
 import Route
 import Session exposing (Flags, Session(..))
 import Url
@@ -58,7 +58,7 @@ init flags url key =
 type Msg
     = LinkClicked Browser.UrlRequest
     | UrlChanged Url.Url
-    | CookieMsg Cookie.Msg
+    | PortMsg Port.Msg
     | GotHomeMsg Home.Msg
     | GotLoginMsg Login.Msg
     | GotRegisterMsg Register.Msg
@@ -82,9 +82,9 @@ update msg model =
         ( UrlChanged url, _ ) ->
             changeRouteTo url model
 
-        ( CookieMsg subMsg, _ ) ->
-            Cookie.update subMsg
-                |> updateWithCookie model CookieMsg
+        ( PortMsg subMsg, _ ) ->
+            Port.update subMsg
+                |> updateWithCookie model PortMsg
 
         ( GotHomeMsg subMsg, Home home ) ->
             Home.update subMsg home
@@ -173,7 +173,7 @@ updateWithCookie model toMsg ( cookie, subCmd ) =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Sub.map CookieMsg Cookie.subscriptions
+    Sub.map PortMsg Port.subscriptions
 
 
 

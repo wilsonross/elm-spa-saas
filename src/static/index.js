@@ -11,11 +11,10 @@ const app = Elm.Main.init({
   },
 });
 
-
 app.ports.setCookie.subscribe(setCookie);
 app.ports.getCookie.subscribe((key) => {
   getCookie(key, parsedCookie => {
-    app.ports.cookieReceiver.send(parsedCookie);
+    app.ports.recieveCookie.send(parsedCookie);
   });
 });
 
