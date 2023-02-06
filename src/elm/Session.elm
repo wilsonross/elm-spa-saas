@@ -10,6 +10,7 @@ module Session exposing
     )
 
 import Browser.Navigation as Nav
+import Dict exposing (Dict)
 import Port exposing (Cookie)
 import Url
 
@@ -27,7 +28,7 @@ type alias GuestSession =
     { key : Nav.Key
     , flags : Flags
     , path : String
-    , cookies : List Cookie
+    , cookies : Dict String String
     }
 
 
@@ -35,7 +36,7 @@ type alias UserSession =
     { key : Nav.Key
     , flags : Flags
     , path : String
-    , cookies : List Cookie
+    , cookies : Dict String String
     , jwt : String
     , id : String
     , email : String
@@ -55,7 +56,7 @@ initGuest flags key path =
         { key = key
         , flags = flags
         , path = path
-        , cookies = []
+        , cookies = Dict.empty
         }
 
 
@@ -99,15 +100,15 @@ apiUrl session =
 
 
 updateSessionCookies : Cookie -> Session -> Session
-updateSessionCookies cookie session =
+updateSessionCookies ( key, value ) session =
     case session of
         Guest guest ->
             Guest
-                { guest | cookies = cookie :: guest.cookies }
+                { guest | cookies = Dict.insert key value guest.cookies }
 
         User user ->
             User
-                { user | cookies = cookie :: user.cookies }
+                { user | cookies = Dict.insert key value user.cookies }
 
 
 updateSessionPath : Url.Url -> Session -> Session

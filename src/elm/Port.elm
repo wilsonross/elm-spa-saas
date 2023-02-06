@@ -1,6 +1,7 @@
 port module Port exposing
     ( Cookie
     , Msg
+    , addGetCookie
     , getCookie
     , recieveCookie
     , setCookie
@@ -50,3 +51,12 @@ update msg =
 subscriptions : Sub Msg
 subscriptions =
     recieveCookie RecieveCookie
+
+
+
+-- HELPERS
+
+
+addGetCookie : String -> ( model, Cmd msg ) -> ( model, Cmd msg )
+addGetCookie key ( model, cmd ) =
+    ( model, Cmd.batch [ cmd, getCookie key ] )

@@ -46,9 +46,7 @@ init flags url key =
         ( home, _ ) =
             Home.init (Session.initGuest flags key url.path)
     in
-    changeRouteTo
-        url
-        (Home home)
+    changeRouteTo url (Home home) |> Port.addGetCookie "session"
 
 
 
