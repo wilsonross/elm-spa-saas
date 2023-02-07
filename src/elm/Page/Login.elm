@@ -4,17 +4,17 @@ import Html exposing (Html, div, form)
 import Html.Attributes exposing (class, name, type_)
 import Http
 import Input exposing (Input(..), viewCheckbox, viewStatefulInput)
-import Json.Decode as Decode exposing (Decoder, string)
-import Json.Decode.Pipeline exposing (optional, required)
+import Json.Decode as Decode exposing (Decoder)
+import Json.Decode.Pipeline exposing (optional)
 import Port
 import Request exposing (Status(..))
 import Response
     exposing
-        ( ErrorDetailed(..)
+        ( AuthResponse
+        , ErrorDetailed(..)
         , ErrorMessage
         , JsonResponse(..)
         , ResponseResult
-        , UserResponse
         )
 import Session exposing (Session)
 import View
@@ -153,7 +153,7 @@ stringToJson : String -> LoginJsonResponse
 stringToJson str =
     Response.stringToJson
         decodeErrorData
-        decodeSuccessfulResponse
+        Response.decodeAuthResponse
         str
 
 
@@ -295,26 +295,13 @@ viewLoginButton =
 
 
 type alias LoginJsonResponse =
-    JsonResponse ErrorData SuccessfulResponse
-
-
-type alias SuccessfulResponse =
-    { record : UserResponse
-    , token : String
-    }
+    JsonResponse ErrorData AuthResponse
 
 
 type alias ErrorData =
     { identity : Maybe ErrorMessage
     , password : Maybe ErrorMessage
     }
-
-
-decodeSuccessfulResponse : Decoder SuccessfulResponse
-decodeSuccessfulResponse =
-    Decode.succeed SuccessfulResponse
-        |> required "record" Response.decodeUserResponse
-        |> required "token" string
 
 
 decodeErrorData : Decoder ErrorData

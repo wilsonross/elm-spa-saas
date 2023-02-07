@@ -1,10 +1,12 @@
 module Response exposing
-    ( ErrorDetailed(..)
+    ( AuthResponse
+    , ErrorDetailed(..)
     , ErrorMessage
     , ErrorResponse
     , JsonResponse(..)
     , ResponseResult
     , UserResponse
+    , decodeAuthResponse
     , decodeErrorMessage
     , decodeErrorResponse
     , decodeUserResponse
@@ -169,3 +171,16 @@ stringToJson_ decodeErr jsonString =
 
         Err err ->
             JsonNone err
+
+
+type alias AuthResponse =
+    { record : UserResponse
+    , token : String
+    }
+
+
+decodeAuthResponse : Decoder AuthResponse
+decodeAuthResponse =
+    Decode.succeed AuthResponse
+        |> required "record" decodeUserResponse
+        |> required "token" string
