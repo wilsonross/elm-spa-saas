@@ -11,7 +11,10 @@ module Session exposing
 
 import Browser.Navigation as Nav
 import Dict exposing (Dict)
+import Http
 import Port exposing (Cookie)
+import Request
+import Response exposing (ResponseResult)
 import Url
 
 
@@ -131,3 +134,35 @@ pathFromSession session =
 
         User user ->
             user.path
+
+
+authRefresh : Session -> (ResponseResult -> msg) -> Cmd msg
+authRefresh session toMsg =
+    let
+        bearer =
+            Http.header "Authorization:"
+                (sessionToCookieToken session)
+    in
+    Http.request
+        { method = "POST"
+        , headers = []
+        , url = Request.joinUrl (apiUrl session) "/api/collections/users/auth-with-password"
+        , body = Http.emptyBody
+        , expect = Response.expectStringDetailed toMsg
+        , timeout = Nothing
+        , tracker = Nothing
+        }
+
+
+sessionToCookieToken : Session -> String
+sessionToCookieToken session =
+    case session of
+        Guest guest ->
+            guest.cookies
+                |> Dict.get "session"
+                |> Maybe.withDefault ""
+
+        User user ->
+            user.cookies
+                |> Dict.get "session"
+                |> Maybe.withDefault ""
