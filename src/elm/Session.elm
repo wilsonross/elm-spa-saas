@@ -6,16 +6,14 @@ module Session exposing
     , initGuest
     , navKey
     , pathFromSession
+    , sessionToCookieToken
     , updateSessionCookies
     , updateSessionPath
     )
 
 import Browser.Navigation as Nav
 import Dict exposing (Dict)
-import Http
 import Port exposing (Cookie)
-import Request
-import Response exposing (ResponseResult)
 import Url
 
 
@@ -135,24 +133,6 @@ pathFromSession session =
 
         User user ->
             user.path
-
-
-authRefresh : Session -> (ResponseResult -> msg) -> Cmd msg
-authRefresh session toMsg =
-    let
-        bearer =
-            Http.header "Authorization:"
-                (sessionToCookieToken session)
-    in
-    Http.request
-        { method = "POST"
-        , headers = []
-        , url = Request.joinUrl (apiUrl session) "/api/collections/users/auth-with-password"
-        , body = Http.emptyBody
-        , expect = Response.expectStringDetailed toMsg
-        , timeout = Nothing
-        , tracker = Nothing
-        }
 
 
 changeSessionVariant : Session -> Cookie -> Session
