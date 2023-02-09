@@ -1,10 +1,10 @@
 port module Port exposing
     ( Cookie
     , Msg
-    , addGetCookie
-    , getCookie
-    , recieveCookie
-    , setCookie
+    , addGetSession
+    , getSession
+    , recieveSession
+    , setSession
     , subscriptions
     , update
     )
@@ -20,13 +20,13 @@ type alias Cookie =
 -- PORTS
 
 
-port setCookie : ( String, String, Int ) -> Cmd msg
+port setSession : ( String, Int ) -> Cmd msg
 
 
-port getCookie : String -> Cmd msg
+port getSession : () -> Cmd msg
 
 
-port recieveCookie : (( String, String ) -> msg) -> Sub msg
+port recieveSession : (( String, String ) -> msg) -> Sub msg
 
 
 
@@ -34,13 +34,13 @@ port recieveCookie : (( String, String ) -> msg) -> Sub msg
 
 
 type Msg
-    = RecieveCookie Cookie
+    = RecieveSession Cookie
 
 
 update : Msg -> ( Cookie, Cmd Msg )
 update msg =
     case msg of
-        RecieveCookie cookie ->
+        RecieveSession cookie ->
             ( cookie, Cmd.none )
 
 
@@ -50,13 +50,13 @@ update msg =
 
 subscriptions : Sub Msg
 subscriptions =
-    recieveCookie RecieveCookie
+    recieveSession RecieveSession
 
 
 
 -- HELPERS
 
 
-addGetCookie : String -> ( model, Cmd msg ) -> ( model, Cmd msg )
-addGetCookie key ( model, cmd ) =
-    ( model, Cmd.batch [ cmd, getCookie key ] )
+addGetSession : ( model, Cmd msg ) -> ( model, Cmd msg )
+addGetSession ( model, cmd ) =
+    ( model, Cmd.batch [ cmd, getSession () ] )

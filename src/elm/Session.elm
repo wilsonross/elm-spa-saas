@@ -2,6 +2,7 @@ module Session exposing
     ( Flags
     , Session(..)
     , apiUrl
+    , changeSessionVariant
     , initGuest
     , navKey
     , pathFromSession
@@ -63,18 +64,18 @@ initGuest flags key path =
         }
 
 
-initUser : GuestSession -> String -> String -> String -> String -> String -> Session
-initUser guest jwt id email firstName lastName =
+initUser : GuestSession -> String -> Session
+initUser guest jwt =
     User
         { key = guest.key
         , flags = guest.flags
         , path = guest.path
         , cookies = guest.cookies
         , jwt = jwt
-        , id = id
-        , email = email
-        , firstName = firstName
-        , lastName = lastName
+        , id = ""
+        , email = ""
+        , firstName = ""
+        , lastName = ""
         }
 
 
@@ -152,6 +153,20 @@ authRefresh session toMsg =
         , timeout = Nothing
         , tracker = Nothing
         }
+
+
+changeSessionVariant : Session -> Cookie -> Session
+changeSessionVariant session ( key, token ) =
+    case session of
+        Guest guest ->
+            if key == "session" && (String.length token /= 0) then
+                initUser guest token
+
+            else
+                Guest guest
+
+        User user ->
+            User user
 
 
 sessionToCookieToken : Session -> String

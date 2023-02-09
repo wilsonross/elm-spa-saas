@@ -93,9 +93,8 @@ updateWithResponse result model =
     case result of
         Ok ( _, res ) ->
             ( { model | response = Response (stringToJson res) }
-            , Port.setCookie
-                ( "session"
-                , Response (stringToJson res)
+            , Port.setSession
+                ( Response (stringToJson res)
                     |> responseToToken
                 , 30
                 )
