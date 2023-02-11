@@ -16,6 +16,7 @@ import Response
         , JsonResponse(..)
         , ResponseResult
         )
+import Route
 import Session exposing (Session)
 import View
     exposing
@@ -47,7 +48,7 @@ init session =
       , identity = Empty
       , password = Empty
       }
-    , Cmd.none
+    , Route.protected session True
     )
 
 

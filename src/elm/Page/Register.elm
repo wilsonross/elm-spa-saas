@@ -20,6 +20,7 @@ import Response
         , ResponseResult
         , UserResponse
         )
+import Route
 import Session exposing (Session)
 import View
     exposing
@@ -56,7 +57,7 @@ init session =
       , firstName = Empty
       , lastName = Empty
       }
-    , Cmd.none
+    , Route.protected session True
     )
 
 
