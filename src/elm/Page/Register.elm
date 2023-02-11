@@ -44,6 +44,7 @@ type alias Model =
     , passwordConfirm : Input
     , firstName : Input
     , lastName : Input
+    , remember : Bool
     }
 
 
@@ -56,6 +57,7 @@ init session =
       , passwordConfirm = Empty
       , firstName = Empty
       , lastName = Empty
+      , remember = True
       }
     , Route.protected session True
     )
@@ -72,6 +74,7 @@ type Msg
     | PasswordChanged String
     | FirstNameChanged String
     | LastNameChanged String
+    | RememberChanged Bool
     | ResetErrorResponse
 
 
@@ -115,6 +118,9 @@ update msg model =
             ( { model | lastName = Input.valueToInput lastName (\_ -> True) }
             , Cmd.none
             )
+
+        RememberChanged remember ->
+            ( { model | remember = remember }, Cmd.none )
 
         ResetErrorResponse ->
             ( { model | response = None }, Cmd.none )
@@ -216,10 +222,10 @@ viewNameInput model =
         ]
 
 
-viewAdditional : Html msg
+viewAdditional : Html Msg
 viewAdditional =
     div [ class "flex items-center justify-between mb-6" ]
-        [ viewCheckbox [] True "remember" "Remember Me"
+        [ viewCheckbox RememberChanged [] True "remember" "Remember Me"
         ]
 
 

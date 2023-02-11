@@ -12,11 +12,11 @@ const app = Elm.Main.init({
 });
 
 app.ports.setSession.subscribe(([token, daysUntilExpiry]) => {
-	setCookie("session", token, daysUntilExpiry);
+  setCookie("session", token, daysUntilExpiry);
 });
 
 app.ports.getSession.subscribe(() => {
-  getCookie("session", parsedCookie => {
+  getCookie("session", (parsedCookie) => {
     app.ports.recieveSession.send(parsedCookie);
   });
 });
@@ -28,7 +28,9 @@ function setCookie(key, token, daysUntilExpiry) {
 
   date.setTime(date.getTime() + msUntilExpiry);
 
-  document.cookie = `${key}=${token};Expires=${date.toUTCString()};${secure}`;
+  document.cookie = `${key}=${token};Expires=${
+    daysUntilExpiry === 0 ? "0" : date.toUTCString()
+  };${secure}`;
 }
 
 function getCookie(key, callback) {

@@ -20,6 +20,7 @@ type Route
     | Testimonials
     | Contact
     | Pricing
+    | ForgotPassword
 
 
 parser : Parser (Route -> a) a
@@ -34,6 +35,7 @@ parser =
         , Parser.map Testimonials (s "testimonials")
         , Parser.map Contact (s "contact")
         , Parser.map Pricing (s "pricing")
+        , Parser.map ForgotPassword (s "forgot-password")
         ]
 
 

@@ -38,6 +38,7 @@ type alias Model =
     , response : Status LoginJsonResponse
     , identity : Input
     , password : Input
+    , remember : Bool
     }
 
 
@@ -47,6 +48,7 @@ init session =
       , response = None
       , identity = Empty
       , password = Empty
+      , remember = True
       }
     , Route.protected session True
     )
@@ -61,6 +63,7 @@ type Msg
     | Login
     | IdentityChanged String
     | PasswordChanged String
+    | RememberChanged Bool
     | ResetErrorResponse
 
 
@@ -89,6 +92,9 @@ update msg model =
             , Cmd.none
             )
 
+        RememberChanged remember ->
+            ( { model | remember = remember }, Cmd.none )
+
         ResetErrorResponse ->
             ( { model | response = None }, Cmd.none )
 
@@ -99,9 +105,8 @@ updateWithResponse result model =
         Ok ( _, res ) ->
             ( { model | response = Response (stringToJson res) }
             , Port.setSession
-                ( Response (stringToJson res)
-                    |> responseToToken
-                , 30
+                ( responseToToken (Response (stringToJson res))
+                , Session.rememberMe model.remember
                 )
             )
 
@@ -261,11 +266,17 @@ viewForm model =
         ]
 
 
-viewAdditional : Html msg
+viewAdditional : Html Msg
 viewAdditional =
     div [ class "flex items-center justify-between mb-6" ]
-        [ viewCheckbox [] True "remember" "Remember Me"
-        , viewLink [ class "text-xs leading-[1.125rem]" ]
+        [ viewCheckbox
+            RememberChanged
+            []
+            True
+            "remember"
+            "Remember Me"
+        , viewLink
+            [ class "text-xs leading-[1.125rem]" ]
             "/forgot-password"
             "Forgot Password?"
         ]

@@ -12,7 +12,7 @@ module Input exposing
 
 import Html exposing (Attribute, Html, div, img, input, text)
 import Html.Attributes exposing (class, name, src, type_)
-import Html.Events exposing (onInput)
+import Html.Events exposing (onCheck, onInput)
 import Json.Encode as Encode
 
 
@@ -111,13 +111,13 @@ viewStatefulInput input msg attr placeholder =
     viewInput (inputBorder input :: attr) placeholder msg
 
 
-viewCheckbox : List (Attribute msg) -> Bool -> String -> String -> Html msg
-viewCheckbox attr checked name label =
+viewCheckbox : (Bool -> msg) -> List (Attribute msg) -> Bool -> String -> String -> Html msg
+viewCheckbox msg attr checked name label =
     div (class "flex items-center gap-2" :: attr)
         [ div
             [ class "w-[1.125rem] h-[1.125rem] relative"
             ]
-            [ viewCheckboxHidden checked
+            [ viewCheckboxHidden msg checked
             , viewCheckboxImageUnchecked
             , viewCheckboxImageChecked
             ]
@@ -125,11 +125,12 @@ viewCheckbox attr checked name label =
         ]
 
 
-viewCheckboxHidden : Bool -> Html msg
-viewCheckboxHidden checked =
+viewCheckboxHidden : (Bool -> msg) -> Bool -> Html msg
+viewCheckboxHidden msg checked =
     input
         [ class "block w-full h-full opacity-0"
         , type_ "checkbox"
+        , onCheck msg
         , Html.Attributes.checked checked
         ]
         []

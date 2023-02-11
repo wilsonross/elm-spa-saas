@@ -7,6 +7,7 @@ module Session exposing
     , isUserAuth
     , navKey
     , pathFromSession
+    , rememberMe
     , sessionToCookieToken
     , updateSessionPath
     , updateSessionVariant
@@ -176,3 +177,12 @@ isUserAuth session =
 
         User _ ->
             True
+
+
+rememberMe : Bool -> Int
+rememberMe remember =
+    if remember then
+        30
+
+    else
+        0

@@ -290,6 +290,9 @@ changeRouteTo url model =
         Just Route.Pricing ->
             underConstruction session
 
+        Just Route.ForgotPassword ->
+            underConstruction session
+
 
 addCmdMsg : Cmd Msg -> ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
 addCmdMsg newCmd ( model, cmd ) =
