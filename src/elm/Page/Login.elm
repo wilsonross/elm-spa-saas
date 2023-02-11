@@ -1,8 +1,8 @@
 module Page.Login exposing (Model, Msg, init, update, view)
 
+import Auth
 import Html exposing (Html, div, form)
 import Html.Attributes exposing (class, name, type_)
-import Http
 import Input exposing (Input(..), viewCheckbox, viewStatefulInput)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Pipeline exposing (optional)
@@ -71,7 +71,11 @@ update msg model =
 
         Login ->
             ( { model | response = Loading }
-            , login model
+            , Auth.authWithPassword
+                GotLoginResponse
+                model.session
+                model.identity
+                model.password
             )
 
         IdentityChanged identity ->
@@ -128,24 +132,6 @@ updateWithError err model =
 
 
 -- HELPERS
-
-
-login : Model -> Cmd Msg
-login model =
-    Http.post
-        { url =
-            Request.joinUrl
-                (Session.apiUrl model.session)
-                "/api/collections/users/auth-with-password"
-        , body =
-            Http.jsonBody
-                (Input.encodeInput
-                    [ ( "identity", model.identity )
-                    , ( "password", model.password )
-                    ]
-                )
-        , expect = Response.expectStringDetailed GotLoginResponse
-        }
 
 
 stringToJson : String -> LoginJsonResponse

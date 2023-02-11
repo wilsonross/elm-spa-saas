@@ -1,8 +1,8 @@
 module Page.Register exposing (Model, Msg, init, update, view)
 
+import Auth
 import Html exposing (Html, div, form)
 import Html.Attributes exposing (class, name, type_)
-import Http
 import Input
     exposing
         ( Input(..)
@@ -82,7 +82,14 @@ update msg model =
 
         Register ->
             ( { model | response = Loading }
-            , register model
+            , Auth.create
+                GotRegisterResponse
+                model.session
+                model.email
+                model.password
+                model.passwordConfirm
+                model.firstName
+                model.lastName
             )
 
         EmailChanged email ->
@@ -222,26 +229,6 @@ viewRegisterButton =
 
 
 -- HELPERS
-
-
-register : Model -> Cmd Msg
-register model =
-    Http.post
-        { url =
-            Request.joinUrl (Session.apiUrl model.session)
-                "/api/collections/users/records"
-        , body =
-            Http.jsonBody
-                (Input.encodeInput
-                    [ ( "email", model.email )
-                    , ( "password", model.password )
-                    , ( "passwordConfirm", model.passwordConfirm )
-                    , ( "firstName", model.firstName )
-                    , ( "lastName", model.lastName )
-                    ]
-                )
-        , expect = Response.expectStringDetailed GotRegisterResponse
-        }
 
 
 checkPassword : String -> Bool
