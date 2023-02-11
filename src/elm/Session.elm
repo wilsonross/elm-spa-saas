@@ -1,9 +1,10 @@
 module Session exposing
-    ( Flags
+    ( Cookie
+    , Flags
     , Session(..)
     , apiUrl
-    , changeSessionVariant
     , initGuest
+    , initUser
     , navKey
     , pathFromSession
     , sessionToCookieToken
@@ -13,12 +14,15 @@ module Session exposing
 
 import Browser.Navigation as Nav
 import Dict exposing (Dict)
-import Port exposing (Cookie)
 import Url
 
 
 
 -- MODEL
+
+
+type alias Cookie =
+    ( String, String )
 
 
 type alias Flags =
@@ -41,7 +45,6 @@ type alias UserSession =
     , cookies : Dict String String
     , jwt : String
     , id : String
-    , email : String
     , firstName : String
     , lastName : String
     }
@@ -62,18 +65,17 @@ initGuest flags key path =
         }
 
 
-initUser : GuestSession -> String -> Session
-initUser guest jwt =
+initUser : GuestSession -> String -> String -> String -> String -> Session
+initUser guest jwt id firstName lastName =
     User
         { key = guest.key
         , flags = guest.flags
         , path = guest.path
         , cookies = guest.cookies
         , jwt = jwt
-        , id = ""
-        , email = ""
-        , firstName = ""
-        , lastName = ""
+        , id = id
+        , firstName = firstName
+        , lastName = lastName
         }
 
 
@@ -133,20 +135,6 @@ pathFromSession session =
 
         User user ->
             user.path
-
-
-changeSessionVariant : Session -> Cookie -> Session
-changeSessionVariant session ( key, token ) =
-    case session of
-        Guest guest ->
-            if key == "session" && (String.length token /= 0) then
-                initUser guest token
-
-            else
-                Guest guest
-
-        User user ->
-            User user
 
 
 sessionToCookieToken : Session -> String

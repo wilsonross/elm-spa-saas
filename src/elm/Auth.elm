@@ -10,17 +10,17 @@ import Session exposing (Session)
 -- HELPERS
 
 
-authRefresh : Session -> (ResponseResult -> msg) -> Cmd msg
-authRefresh session toMsg =
+authRefresh : (ResponseResult -> msg) -> Session -> Cmd msg
+authRefresh toMsg session =
     let
         bearer =
-            Http.header "Authorization:"
+            Http.header "Authorization"
                 (Session.sessionToCookieToken session)
     in
     Http.request
         { method = "POST"
         , headers = [ bearer ]
-        , url = Request.joinUrl (Session.apiUrl session) "/api/collections/users/auth-with-password"
+        , url = Request.joinUrl (Session.apiUrl session) "/api/collections/users/auth-refresh"
         , body = Http.emptyBody
         , expect = Response.expectStringDetailed toMsg
         , timeout = Nothing

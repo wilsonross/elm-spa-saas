@@ -8,9 +8,9 @@ import Page
 import Page.Home as Home
 import Page.Login as Login
 import Page.Register as Register
-import Port exposing (Cookie)
+import Port
 import Route
-import Session exposing (Flags, Session(..))
+import Session exposing (Cookie, Flags, Session(..))
 import Url
 
 
@@ -81,8 +81,7 @@ update msg model =
             changeRouteTo url model
 
         ( PortMsg subMsg, _ ) ->
-            Port.update subMsg
-                |> updateWithCookie model PortMsg
+            Port.update (toSession model) subMsg |> updateWithPort model PortMsg
 
         ( GotHomeMsg subMsg, Home home ) ->
             Home.update subMsg home
@@ -156,11 +155,9 @@ updateWith toModel toMsg ( subModel, subCmd ) =
     )
 
 
-updateWithCookie : Model -> (subMsg -> Msg) -> ( Cookie, Cmd subMsg ) -> ( Model, Cmd Msg )
-updateWithCookie model toMsg ( cookie, subCmd ) =
-    ( toSession model
-        |> Session.updateSessionCookies cookie
-        |> updateModelSession model
+updateWithPort : Model -> (subMsg -> Msg) -> ( Session, Cmd subMsg ) -> ( Model, Cmd Msg )
+updateWithPort model toMsg ( session, subCmd ) =
+    ( updateModelSession model session
     , Cmd.map toMsg subCmd
     )
 
