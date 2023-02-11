@@ -4,6 +4,7 @@ module Session exposing
     , Session(..)
     , apiUrl
     , initGuest
+    , isUserAuth
     , navKey
     , pathFromSession
     , sessionToCookieToken
@@ -165,3 +166,13 @@ updateSessionVariant authResponse session =
 
         User user ->
             User user
+
+
+isUserAuth : Session -> Bool
+isUserAuth session =
+    case session of
+        Guest _ ->
+            False
+
+        User _ ->
+            True

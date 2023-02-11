@@ -101,11 +101,10 @@ update msg model =
             )
 
         ( GotAuthRefreshResponse response, _ ) ->
-            ( toSession model
-                |> updateSessionWithResult response
-                |> updateModelWithSession model
-            , Cmd.none
-            )
+            updateModelWithSessionCmd
+                model
+                (updateSessionWithResult response (toSession model))
+                Cmd.none
 
         ( GotHomeMsg subMsg, Home home ) ->
             Home.update subMsg home
@@ -141,6 +140,25 @@ updateModelWithSession model session =
 
         Register register ->
             Register { register | session = session }
+
+
+updateModelWithSessionCmd : Model -> Session -> Cmd Msg -> ( Model, Cmd Msg )
+updateModelWithSessionCmd model session msg =
+    case model of
+        Home _ ->
+            Home.init session
+                |> updateWith Home GotHomeMsg
+                |> addCmdMsg msg
+
+        Login _ ->
+            Login.init session
+                |> updateWith Login GotLoginMsg
+                |> addCmdMsg msg
+
+        Register _ ->
+            Register.init session
+                |> updateWith Register GotRegisterMsg
+                |> addCmdMsg msg
 
 
 updateSessionWithResult : ResponseResult -> Session -> Session
@@ -231,3 +249,8 @@ changeRouteTo url model =
         Just Route.Register ->
             Register.init session
                 |> updateWith Register GotRegisterMsg
+
+
+addCmdMsg : Cmd Msg -> ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
+addCmdMsg newCmd ( model, cmd ) =
+    ( model, Cmd.batch [ cmd, newCmd ] )

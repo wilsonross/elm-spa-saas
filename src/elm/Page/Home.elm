@@ -22,7 +22,10 @@ init : Session -> ( Model, Cmd Msg )
 init session =
     let
         ( header, subMsg ) =
-            Header.init (apiUrl session) (pathFromSession session)
+            Header.init
+                (apiUrl session)
+                (pathFromSession session)
+                (Session.isUserAuth session)
     in
     ( { session = session
       , header = header

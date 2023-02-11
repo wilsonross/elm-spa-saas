@@ -1,6 +1,6 @@
 module Header exposing
     ( Model
-    , Msg
+    , Msg(..)
     , PaginatedResponse
     , Status(..)
     , init
@@ -18,6 +18,7 @@ import Http
 import Json.Decode as Decode exposing (Decoder, at, int, list, string)
 import Json.Decode.Pipeline exposing (custom, optional, required)
 import Request
+import Session exposing (Session(..))
 import View exposing (Link, viewButtonImage, viewLink, viewLinkImage, viewLogo)
 
 
@@ -30,6 +31,7 @@ type alias Model =
     , navOpen : Bool
     , mobileSearchOpen : Bool
     , path : String
+    , auth : Bool
     }
 
 
@@ -39,12 +41,13 @@ type Status
     | Success PaginatedResponse
 
 
-init : String -> String -> ( Model, Cmd Msg )
-init apiUrl currentPath =
+init : String -> String -> Bool -> ( Model, Cmd Msg )
+init apiUrl currentPath userAuth =
     ( { links = Loading
       , navOpen = False
       , mobileSearchOpen = False
       , path = currentPath
+      , auth = userAuth
       }
     , Http.get
         { url = Request.joinUrl apiUrl "/api/collections/links/records"
@@ -119,7 +122,7 @@ view model =
         [ viewLogo []
         , viewDesktopSearch
         , viewMobileSearch model
-        , viewAuthLinks
+        , viewAuthLinks model.auth
         , viewNavButton
         , viewOverlay model
         , viewNav model
@@ -181,8 +184,24 @@ viewDesktopSearch =
         ]
 
 
-viewAuthLinks : Html Msg
-viewAuthLinks =
+viewAuthLinks : Bool -> Html Msg
+viewAuthLinks auth =
+    if auth == True then
+        viewAuthenticatedLinks
+
+    else
+        viewUnauthenticatedLinks
+
+
+viewAuthenticatedLinks : Html msg
+viewAuthenticatedLinks =
+    viewLinkImage [ class "w-[62px] h-[18px]" ]
+        "/account"
+        "/static/img/account.svg"
+
+
+viewUnauthenticatedLinks : Html msg
+viewUnauthenticatedLinks =
     div [ class "flex gap-6 sm:gap-9" ]
         [ viewLinkImage [ class "w-[41px] h-[18px]" ]
             "/login"
