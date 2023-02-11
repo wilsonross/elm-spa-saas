@@ -257,7 +257,8 @@ changeRouteTo url model =
     in
     case Route.fromUrl url of
         Nothing ->
-            ( model, Cmd.none )
+            Error.init session 404 "Page not found"
+                |> updateWith Error GotErrorMsg
 
         Just Route.Home ->
             Home.init session
@@ -270,10 +271,6 @@ changeRouteTo url model =
         Just Route.Register ->
             Register.init session
                 |> updateWith Register GotRegisterMsg
-
-        Just Route.Error ->
-            Error.init session 404 "Page not found"
-                |> updateWith Error GotErrorMsg
 
 
 addCmdMsg : Cmd Msg -> ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
