@@ -12,6 +12,7 @@ type Route
     = Home
     | Login
     | Register
+    | Error
 
 
 parser : Parser (Route -> a) a
@@ -20,6 +21,7 @@ parser =
         [ Parser.map Home Parser.top
         , Parser.map Login (s "login")
         , Parser.map Register (s "register")
+        , Parser.map Error (s "error")
         ]
 
 

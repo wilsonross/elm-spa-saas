@@ -7,6 +7,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Json.Decode as Decode
 import Page
+import Page.Error as Error
 import Page.Home as Home
 import Page.Login as Login
 import Page.Register as Register
@@ -46,6 +47,7 @@ type Model
     = Home Home.Model
     | Login Login.Model
     | Register Register.Model
+    | Error Error.Model
 
 
 init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
@@ -69,6 +71,7 @@ type Msg
     | GotHomeMsg Home.Msg
     | GotLoginMsg Login.Msg
     | GotRegisterMsg Register.Msg
+    | GotErrorMsg Error.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -118,6 +121,10 @@ update msg model =
             Register.update subMsg register
                 |> updateWith Register GotRegisterMsg
 
+        ( GotErrorMsg subMsg, Error error ) ->
+            Error.update subMsg error
+                |> updateWith Error GotErrorMsg
+
         ( _, _ ) ->
             ( model, Cmd.none )
 
@@ -141,6 +148,9 @@ updateModelWithSession model session =
         Register register ->
             Register { register | session = session }
 
+        Error error ->
+            Error { error | session = session }
+
 
 updateModelWithSessionCmd : Model -> Session -> Cmd Msg -> ( Model, Cmd Msg )
 updateModelWithSessionCmd model session msg =
@@ -158,6 +168,11 @@ updateModelWithSessionCmd model session msg =
         Register _ ->
             Register.init session
                 |> updateWith Register GotRegisterMsg
+                |> addCmdMsg msg
+
+        Error _ ->
+            Error.init session 404 "Page not found"
+                |> updateWith Error GotErrorMsg
                 |> addCmdMsg msg
 
 
@@ -210,6 +225,9 @@ view model =
         Register register ->
             Page.viewPage GotRegisterMsg (Register.view register)
 
+        Error error ->
+            Page.viewPage GotErrorMsg (Error.view error)
+
 
 
 -- HELPERS
@@ -226,6 +244,9 @@ toSession model =
 
         Register register ->
             register.session
+
+        Error error ->
+            error.session
 
 
 changeRouteTo : Url.Url -> Model -> ( Model, Cmd Msg )
@@ -249,6 +270,10 @@ changeRouteTo url model =
         Just Route.Register ->
             Register.init session
                 |> updateWith Register GotRegisterMsg
+
+        Just Route.Error ->
+            Error.init session 404 "Page not found"
+                |> updateWith Error GotErrorMsg
 
 
 addCmdMsg : Cmd Msg -> ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
