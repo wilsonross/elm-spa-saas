@@ -1,14 +1,22 @@
 module Main exposing (main)
 
+import Auth
 import Browser exposing (Document)
 import Browser.Navigation as Nav
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Json.Decode as Decode
 import Page
 import Page.Home as Home
 import Page.Login as Login
 import Page.Register as Register
 import Port
+import Response
+    exposing
+        ( AuthResponse
+        , JsonResponse(..)
+        , ResponseResult
+        )
 import Route
 import Session exposing (Cookie, Flags, Session(..))
 import Url
@@ -56,7 +64,8 @@ init flags url key =
 type Msg
     = LinkClicked Browser.UrlRequest
     | UrlChanged Url.Url
-    | PortMsg Port.Msg
+    | RecieveSession Cookie
+    | GotAuthRefreshResponse ResponseResult
     | GotHomeMsg Home.Msg
     | GotLoginMsg Login.Msg
     | GotRegisterMsg Register.Msg
@@ -80,8 +89,23 @@ update msg model =
         ( UrlChanged url, _ ) ->
             changeRouteTo url model
 
-        ( PortMsg subMsg, _ ) ->
-            Port.update (toSession model) subMsg |> updateWithPort model PortMsg
+        ( RecieveSession cookie, _ ) ->
+            let
+                updatedSession =
+                    Session.updateSessionWithCookie
+                        cookie
+                        (toSession model)
+            in
+            ( updatedSession |> updateModelWithSession model
+            , updatedSession |> Auth.authRefresh GotAuthRefreshResponse
+            )
+
+        ( GotAuthRefreshResponse response, _ ) ->
+            ( toSession model
+                |> updateSessionWithResult response
+                |> updateModelWithSession model
+            , Cmd.none
+            )
 
         ( GotHomeMsg subMsg, Home home ) ->
             Home.update subMsg home
@@ -99,6 +123,80 @@ update msg model =
             ( model, Cmd.none )
 
 
+updateWith : (subModel -> Model) -> (subMsg -> Msg) -> ( subModel, Cmd subMsg ) -> ( Model, Cmd Msg )
+updateWith toModel toMsg ( subModel, subCmd ) =
+    ( toModel subModel
+    , Cmd.map toMsg subCmd
+    )
+
+
+updateModelWithSession : Model -> Session -> Model
+updateModelWithSession model session =
+    case model of
+        Home home ->
+            Home { home | session = session }
+
+        Login login ->
+            Login { login | session = session }
+
+        Register register ->
+            Register { register | session = session }
+
+
+updateSessionWithResult : ResponseResult -> Session -> Session
+updateSessionWithResult result session =
+    case result of
+        Ok ( _, res ) ->
+            Response.stringToJson
+                (Decode.succeed {})
+                Response.decodeAuthResponse
+                res
+                |> updateSessionWithJson session
+
+        Err _ ->
+            session
+
+
+updateSessionWithJson : Session -> JsonResponse {} AuthResponse -> Session
+updateSessionWithJson session response =
+    case response of
+        JsonSuccess res ->
+            Session.updateSessionVariant res session
+
+        _ ->
+            session
+
+
+
+-- SUBSCRIPTIONS
+
+
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+    Port.recieveSession RecieveSession
+
+
+
+-- VIEW
+
+
+view : Model -> Document Msg
+view model =
+    case model of
+        Home home ->
+            Page.viewPage GotHomeMsg (Home.view home)
+
+        Login login ->
+            Page.viewPage GotLoginMsg (Login.view login)
+
+        Register register ->
+            Page.viewPage GotRegisterMsg (Register.view register)
+
+
+
+-- HELPERS
+
+
 toSession : Model -> Session
 toSession model =
     case model of
@@ -110,19 +208,6 @@ toSession model =
 
         Register register ->
             register.session
-
-
-updateModelSession : Model -> Session -> Model
-updateModelSession model session =
-    case model of
-        Home home ->
-            Home { home | session = session }
-
-        Login login ->
-            Login { login | session = session }
-
-        Register register ->
-            Register { register | session = session }
 
 
 changeRouteTo : Url.Url -> Model -> ( Model, Cmd Msg )
@@ -146,43 +231,3 @@ changeRouteTo url model =
         Just Route.Register ->
             Register.init session
                 |> updateWith Register GotRegisterMsg
-
-
-updateWith : (subModel -> Model) -> (subMsg -> Msg) -> ( subModel, Cmd subMsg ) -> ( Model, Cmd Msg )
-updateWith toModel toMsg ( subModel, subCmd ) =
-    ( toModel subModel
-    , Cmd.map toMsg subCmd
-    )
-
-
-updateWithPort : Model -> (subMsg -> Msg) -> ( Session, Cmd subMsg ) -> ( Model, Cmd Msg )
-updateWithPort model toMsg ( session, subCmd ) =
-    ( updateModelSession model session
-    , Cmd.map toMsg subCmd
-    )
-
-
-
--- SUBSCRIPTIONS
-
-
-subscriptions : Model -> Sub Msg
-subscriptions _ =
-    Sub.map PortMsg Port.subscriptions
-
-
-
--- VIEW
-
-
-view : Model -> Document Msg
-view model =
-    case model of
-        Home home ->
-            Page.viewPage GotHomeMsg (Home.view home)
-
-        Login login ->
-            Page.viewPage GotLoginMsg (Login.view login)
-
-        Register register ->
-            Page.viewPage GotRegisterMsg (Register.view register)

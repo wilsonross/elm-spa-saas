@@ -4,16 +4,17 @@ module Session exposing
     , Session(..)
     , apiUrl
     , initGuest
-    , initUser
     , navKey
     , pathFromSession
     , sessionToCookieToken
-    , updateSessionCookies
     , updateSessionPath
+    , updateSessionVariant
+    , updateSessionWithCookie
     )
 
 import Browser.Navigation as Nav
 import Dict exposing (Dict)
+import Response exposing (AuthResponse)
 import Url
 
 
@@ -103,8 +104,8 @@ apiUrl session =
             user.flags.apiUrl
 
 
-updateSessionCookies : Cookie -> Session -> Session
-updateSessionCookies ( key, value ) session =
+updateSessionWithCookie : Cookie -> Session -> Session
+updateSessionWithCookie ( key, value ) session =
     case session of
         Guest guest ->
             Guest
@@ -149,3 +150,18 @@ sessionToCookieToken session =
             user.cookies
                 |> Dict.get "session"
                 |> Maybe.withDefault ""
+
+
+updateSessionVariant : AuthResponse -> Session -> Session
+updateSessionVariant authResponse session =
+    case session of
+        Guest guest ->
+            initUser
+                guest
+                authResponse.token
+                authResponse.record.id
+                authResponse.record.firstName
+                authResponse.record.lastName
+
+        User user ->
+            User user

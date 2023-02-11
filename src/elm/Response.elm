@@ -184,7 +184,3 @@ decodeAuthResponse =
     Decode.succeed AuthResponse
         |> required "record" decodeUserResponse
         |> required "token" string
-
-
-type alias AuthRefreshJsonResponse =
-    JsonResponse {} AuthResponse
