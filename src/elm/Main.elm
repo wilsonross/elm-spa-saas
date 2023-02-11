@@ -272,7 +272,31 @@ changeRouteTo url model =
             Register.init session
                 |> updateWith Register GotRegisterMsg
 
+        Just Route.Account ->
+            underConstruction session
+
+        Just Route.About ->
+            underConstruction session
+
+        Just Route.HowItWorks ->
+            underConstruction session
+
+        Just Route.Testimonials ->
+            underConstruction session
+
+        Just Route.Contact ->
+            underConstruction session
+
+        Just Route.Pricing ->
+            underConstruction session
+
 
 addCmdMsg : Cmd Msg -> ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
 addCmdMsg newCmd ( model, cmd ) =
     ( model, Cmd.batch [ cmd, newCmd ] )
+
+
+underConstruction : Session -> ( Model, Cmd Msg )
+underConstruction session =
+    Error.init session 503 "Under construction"
+        |> updateWith Error GotErrorMsg

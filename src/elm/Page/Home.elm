@@ -110,7 +110,7 @@ viewButton =
                 ++ " justify-center items-center px-[1.125rem] font-semibold"
                 ++ " text-lg leading-[1.625rem]"
         ]
-        "/about"
+        "/contact"
         "Lets Talk Buisness"
 
 
