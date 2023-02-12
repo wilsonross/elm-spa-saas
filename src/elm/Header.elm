@@ -41,17 +41,23 @@ type Status
     | Success PaginatedResponse
 
 
-init : String -> String -> Session -> ( Model, Cmd Msg )
-init apiUrl currentPath session =
+init : Session -> ( Model, Cmd Msg )
+init session =
     ( { session = session
       , links = Loading
       , navOpen = False
       , mobileSearchOpen = False
-      , path = currentPath
+      , path = Session.pathFromSession session
       }
     , Http.get
-        { url = Request.joinUrl apiUrl "/api/collections/links/records"
-        , expect = Http.expectJson GotPaginatedResponse decodePaginatedResponse
+        { url =
+            Request.joinUrl
+                (Session.apiUrl session)
+                "/api/collections/links/records"
+        , expect =
+            Http.expectJson
+                GotPaginatedResponse
+                decodePaginatedResponse
         }
     )
 

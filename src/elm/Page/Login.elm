@@ -106,9 +106,8 @@ updateWithResponse result model =
             ( { model
                 | response = Response (Response.stringToAuthJson res)
                 , session =
-                    Session.updateSessionWithJson
-                        model.session
-                        (Response.stringToAuthJson res)
+                    Response.stringToAuthJson res
+                        |> Session.updateSessionWithJson model.session
               }
             , cmdOnSuccess (Response (Response.stringToAuthJson res)) model
             )

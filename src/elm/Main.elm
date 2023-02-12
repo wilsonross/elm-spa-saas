@@ -5,7 +5,6 @@ import Browser exposing (Document)
 import Browser.Navigation as Nav
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Json.Decode as Decode
 import Page
 import Page.Error as Error
 import Page.Home as Home
@@ -92,13 +91,10 @@ update msg model =
             changeRouteTo url model
 
         ( RecieveSession cookie, _ ) ->
-            authRefresh cookie GotAuthRefreshResponse model
+            handleRecieveSession cookie model
 
         ( GotAuthRefreshResponse response, _ ) ->
-            updateModelWithSessionCmd
-                model
-                (updateSessionWithResult response (toSession model))
-                Cmd.none
+            handleAuthRefreshResponse response model
 
         ( GotHomeMsg subMsg, Home home ) ->
             Home.update subMsg home
@@ -118,26 +114,6 @@ update msg model =
 
         ( _, _ ) ->
             ( model, Cmd.none )
-
-
-authRefresh : Cookie -> (ResponseResult -> Msg) -> Model -> ( Model, Cmd Msg )
-authRefresh ( key, value, expiry ) toMsg model =
-    let
-        updatedSession =
-            Session.updateSessionWithCookie
-                ( key, value, expiry )
-                (toSession model)
-    in
-    if String.length value == 0 then
-        updateModelWithSessionCmd
-            model
-            (Session.forceGuestSession updatedSession)
-            Cmd.none
-
-    else
-        ( updateModelWithSession model updatedSession
-        , Auth.authRefresh toMsg (toSession model)
-        )
 
 
 updateWith : (subModel -> Model) -> (subMsg -> Msg) -> ( subModel, Cmd subMsg ) -> ( Model, Cmd Msg )
@@ -163,38 +139,11 @@ updateModelWithSession model session =
             Error { error | session = session }
 
 
-updateModelWithSessionCmd : Model -> Session -> Cmd Msg -> ( Model, Cmd Msg )
-updateModelWithSessionCmd model session msg =
-    case model of
-        Home _ ->
-            Home.init session
-                |> updateWith Home GotHomeMsg
-                |> addCmdMsg msg
-
-        Login _ ->
-            Login.init session
-                |> updateWith Login GotLoginMsg
-                |> addCmdMsg msg
-
-        Register _ ->
-            Register.init session
-                |> updateWith Register GotRegisterMsg
-                |> addCmdMsg msg
-
-        Error _ ->
-            Error.init session 404 "Page not found"
-                |> updateWith Error GotErrorMsg
-                |> addCmdMsg msg
-
-
 updateSessionWithResult : ResponseResult -> Session -> Session
 updateSessionWithResult result session =
     case result of
         Ok ( _, res ) ->
-            Response.stringToJson
-                (Decode.succeed {})
-                Response.decodeAuthResponse
-                res
+            Response.stringToAuthJson res
                 |> Session.updateSessionWithJson session
 
         Err _ ->
@@ -254,7 +203,8 @@ changeRouteTo : Url.Url -> Model -> ( Model, Cmd Msg )
 changeRouteTo url model =
     let
         session =
-            toSession model |> Session.updateSessionPath url
+            toSession model
+                |> Session.updateSessionPath url
     in
     case Route.fromUrl url of
         Nothing ->
@@ -295,6 +245,30 @@ changeRouteTo url model =
             underConstruction session
 
 
+resetModel : Model -> Cmd Msg -> ( Model, Cmd Msg )
+resetModel model msg =
+    case model of
+        Home home ->
+            Home.init home.session
+                |> updateWith Home GotHomeMsg
+                |> addCmdMsg msg
+
+        Login login ->
+            Login.init login.session
+                |> updateWith Login GotLoginMsg
+                |> addCmdMsg msg
+
+        Register register ->
+            Register.init register.session
+                |> updateWith Register GotRegisterMsg
+                |> addCmdMsg msg
+
+        Error error ->
+            Error.init error.session 404 "Page not found"
+                |> updateWith Error GotErrorMsg
+                |> addCmdMsg msg
+
+
 addCmdMsg : Cmd Msg -> ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
 addCmdMsg newCmd ( model, cmd ) =
     ( model, Cmd.batch [ cmd, newCmd ] )
@@ -304,3 +278,42 @@ underConstruction : Session -> ( Model, Cmd Msg )
 underConstruction session =
     Error.init session 503 "Under construction"
         |> updateWith Error GotErrorMsg
+
+
+handleRecieveSession : Cookie -> Model -> ( Model, Cmd Msg )
+handleRecieveSession ( key, value, expiry ) model =
+    let
+        updatedSession =
+            toSession model
+                |> Session.updateSessionWithCookie
+                    ( key, value, expiry )
+    in
+    if String.length value == 0 then
+        resetModel
+            (Session.forceGuestSession updatedSession
+                |> updateModelWithSession model
+            )
+            Cmd.none
+
+    else
+        updatedSession
+            |> updateModelWithSession model
+            |> authRefresh
+
+
+authRefresh : Model -> ( Model, Cmd Msg )
+authRefresh model =
+    ( model
+    , toSession model
+        |> Auth.authRefresh GotAuthRefreshResponse
+    )
+
+
+handleAuthRefreshResponse : ResponseResult -> Model -> ( Model, Cmd Msg )
+handleAuthRefreshResponse response model =
+    resetModel
+        (toSession model
+            |> updateSessionWithResult response
+            |> updateModelWithSession model
+        )
+        Cmd.none

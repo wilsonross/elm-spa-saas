@@ -83,7 +83,7 @@ encodeInput : List ( String, Input ) -> Encode.Value
 encodeInput encodingData =
     Encode.object
         (List.map
-            (\( key, value ) -> ( key, Encode.string <| stringFromInput value ))
+            (\( key, value ) -> ( key, stringFromInput value |> Encode.string ))
             encodingData
         )
 

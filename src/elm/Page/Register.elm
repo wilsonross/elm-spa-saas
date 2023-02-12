@@ -165,9 +165,8 @@ updateWithLoginResponse result model =
             ( { model
                 | loginResponse = Response (Response.stringToAuthJson res)
                 , session =
-                    Session.updateSessionWithJson
-                        model.session
-                        (Response.stringToAuthJson res)
+                    Response.stringToAuthJson res
+                        |> Session.updateSessionWithJson model.session
               }
             , cmdOnAuthSuccess (Response (Response.stringToAuthJson res)) model
             )
@@ -249,8 +248,8 @@ view model =
                 "flex justify-center items-center h-screen rounded-md px-4"
             ]
             [ viewForm model
-            , errorsFromRegisterStatus model.registerResponse |> viewErrors
-            , Response.errorsFromAuthStatus model.loginResponse |> viewErrors
+            , viewErrors (errorsFromRegisterStatus model.registerResponse)
+            , viewErrors (Response.errorsFromAuthStatus model.loginResponse)
             ]
     }
 

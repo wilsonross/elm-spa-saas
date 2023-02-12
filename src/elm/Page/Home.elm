@@ -4,7 +4,7 @@ import Header exposing (PaginatedResponse, Status(..))
 import Html exposing (Html, div, h1, img, p, span, text)
 import Html.Attributes exposing (class, src)
 import Page exposing (viewComponent)
-import Session exposing (Session, apiUrl, pathFromSession)
+import Session exposing (Session)
 import View exposing (Link, viewLink)
 
 
@@ -22,10 +22,7 @@ init : Session -> ( Model, Cmd Msg )
 init session =
     let
         ( header, subMsg ) =
-            Header.init
-                (apiUrl session)
-                (pathFromSession session)
-                session
+            Header.init session
     in
     ( { session = session
       , header = header
@@ -62,7 +59,8 @@ view model =
 
 viewHeader : Model -> Html Msg
 viewHeader model =
-    viewComponent GotHeaderMsg (Header.view model.header)
+    Header.view model.header
+        |> viewComponent GotHeaderMsg
 
 
 viewCta : Html msg
