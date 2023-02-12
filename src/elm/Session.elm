@@ -12,11 +12,12 @@ module Session exposing
     , updateSessionPath
     , updateSessionVariant
     , updateSessionWithCookie
+    , updateSessionWithJson
     )
 
 import Browser.Navigation as Nav
 import Dict exposing (Dict)
-import Response exposing (AuthResponse)
+import Response exposing (AuthResponse, JsonResponse(..))
 import Url
 
 
@@ -152,6 +153,16 @@ sessionToCookieToken session =
             user.cookies
                 |> Dict.get "session"
                 |> Maybe.withDefault ""
+
+
+updateSessionWithJson : Session -> JsonResponse badResponse AuthResponse -> Session
+updateSessionWithJson session response =
+    case response of
+        JsonSuccess res ->
+            updateSessionVariant res session
+
+        _ ->
+            session
 
 
 updateSessionVariant : AuthResponse -> Session -> Session

@@ -14,8 +14,7 @@ import Page.Register as Register
 import Port
 import Response
     exposing
-        ( AuthResponse
-        , JsonResponse(..)
+        ( JsonResponse(..)
         , ResponseResult
         )
 import Route
@@ -184,19 +183,9 @@ updateSessionWithResult result session =
                 (Decode.succeed {})
                 Response.decodeAuthResponse
                 res
-                |> updateSessionWithJson session
+                |> Session.updateSessionWithJson session
 
         Err _ ->
-            session
-
-
-updateSessionWithJson : Session -> JsonResponse {} AuthResponse -> Session
-updateSessionWithJson session response =
-    case response of
-        JsonSuccess res ->
-            Session.updateSessionVariant res session
-
-        _ ->
             session
 
 

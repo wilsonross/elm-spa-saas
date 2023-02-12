@@ -1,6 +1,7 @@
 module Page.Login exposing (Model, Msg, init, update, view)
 
 import Auth
+import Browser.Navigation as Nav
 import Html exposing (Html, div, form)
 import Html.Attributes exposing (class, name, type_)
 import Input exposing (Input(..), viewCheckbox, viewStatefulInput)
@@ -103,15 +104,39 @@ updateWithResponse : ResponseResult -> Model -> ( Model, Cmd Msg )
 updateWithResponse result model =
     case result of
         Ok ( _, res ) ->
-            ( { model | response = Response (stringToJson res) }
-            , Port.setSession
-                ( responseToToken (Response (stringToJson res))
-                , Session.rememberMe model.remember
-                )
+            ( { model
+                | response = Response (stringToJson res)
+                , session =
+                    Session.updateSessionWithJson
+                        model.session
+                        (stringToJson res)
+              }
+            , cmdOnSuccess (Response (stringToJson res)) model
             )
 
         Err err ->
             updateWithError err model
+
+
+cmdOnSuccess : Status LoginJsonResponse -> Model -> Cmd msg
+cmdOnSuccess status model =
+    case status of
+        Response jsonResponse ->
+            case jsonResponse of
+                JsonSuccess res ->
+                    Cmd.batch
+                        [ Port.setSession
+                            ( res.token, Session.rememberMe model.remember )
+                        , Nav.pushUrl
+                            (Session.navKey model.session)
+                            "/account"
+                        ]
+
+                _ ->
+                    Cmd.none
+
+        _ ->
+            Cmd.none
 
 
 updateWithError : ErrorDetailed -> Model -> ( Model, Cmd Msg )
