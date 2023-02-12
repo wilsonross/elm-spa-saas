@@ -53,7 +53,7 @@ init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url key =
     let
         ( home, _ ) =
-            Home.init (Session.initGuest flags key url.path)
+            Home.init (Session.initLoading flags key url.path)
     in
     changeRouteTo url (Home home) |> Port.addGetSession
 
@@ -186,7 +186,7 @@ updateSessionWithResult result session =
                 |> Session.updateSessionWithJson session
 
         Err _ ->
-            session
+            Session.forceGuestSession session
 
 
 

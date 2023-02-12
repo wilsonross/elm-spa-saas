@@ -27,11 +27,11 @@ import View exposing (Link, viewButtonImage, viewLink, viewLinkImage, viewLogo)
 
 
 type alias Model =
-    { links : Status
+    { session : Session
+    , links : Status
     , navOpen : Bool
     , mobileSearchOpen : Bool
     , path : String
-    , auth : Bool
     }
 
 
@@ -41,13 +41,13 @@ type Status
     | Success PaginatedResponse
 
 
-init : String -> String -> Bool -> ( Model, Cmd Msg )
-init apiUrl currentPath userAuth =
-    ( { links = Loading
+init : String -> String -> Session -> ( Model, Cmd Msg )
+init apiUrl currentPath session =
+    ( { session = session
+      , links = Loading
       , navOpen = False
       , mobileSearchOpen = False
       , path = currentPath
-      , auth = userAuth
       }
     , Http.get
         { url = Request.joinUrl apiUrl "/api/collections/links/records"
@@ -122,7 +122,7 @@ view model =
         [ viewLogo []
         , viewDesktopSearch
         , viewMobileSearch model
-        , viewAuthLinks model.auth
+        , viewAuthLinks model.session
         , viewNavButton
         , viewOverlay model
         , viewNav model
@@ -184,13 +184,17 @@ viewDesktopSearch =
         ]
 
 
-viewAuthLinks : Bool -> Html Msg
-viewAuthLinks auth =
-    if auth == True then
-        viewAuthenticatedLinks
+viewAuthLinks : Session -> Html Msg
+viewAuthLinks session =
+    case session of
+        Session.Loading _ ->
+            text ""
 
-    else
-        viewUnauthenticatedLinks
+        Guest _ ->
+            viewUnauthenticatedLinks
+
+        User _ ->
+            viewAuthenticatedLinks
 
 
 viewAuthenticatedLinks : Html msg

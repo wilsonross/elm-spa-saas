@@ -25,7 +25,7 @@ init session =
             Header.init
                 (apiUrl session)
                 (pathFromSession session)
-                (Session.isUserAuth session)
+                session
     in
     ( { session = session
       , header = header

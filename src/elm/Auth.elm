@@ -17,26 +17,22 @@ import Session exposing (Session)
 
 authRefresh : (ResponseResult -> msg) -> Session -> Cmd msg
 authRefresh toMsg session =
-    if String.length (Session.sessionToCookieToken session) == 0 then
-        Cmd.none
-
-    else
-        Http.request
-            { method = "POST"
-            , headers =
-                [ Http.header
-                    "Authorization"
-                    (Session.sessionToCookieToken session)
-                ]
-            , url =
-                Request.joinUrl
-                    (Session.apiUrl session)
-                    "/api/collections/users/auth-refresh"
-            , body = Http.emptyBody
-            , expect = Response.expectStringDetailed toMsg
-            , timeout = Nothing
-            , tracker = Nothing
-            }
+    Http.request
+        { method = "POST"
+        , headers =
+            [ Http.header
+                "Authorization"
+                (Session.sessionToCookieToken session)
+            ]
+        , url =
+            Request.joinUrl
+                (Session.apiUrl session)
+                "/api/collections/users/auth-refresh"
+        , body = Http.emptyBody
+        , expect = Response.expectStringDetailed toMsg
+        , timeout = Nothing
+        , tracker = Nothing
+        }
 
 
 authWithPassword : (ResponseResult -> msg) -> Session -> Input -> Input -> Cmd msg

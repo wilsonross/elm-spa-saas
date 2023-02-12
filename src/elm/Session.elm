@@ -3,14 +3,14 @@ module Session exposing
     , Flags
     , Session(..)
     , apiUrl
+    , forceGuestSession
     , initGuest
-    , isUserAuth
+    , initLoading
     , navKey
     , pathFromSession
     , rememberMe
     , sessionToCookieToken
     , updateSessionPath
-    , updateSessionVariant
     , updateSessionWithCookie
     , updateSessionWithJson
     )
@@ -55,18 +55,24 @@ type alias UserSession =
 
 
 type Session
-    = Guest GuestSession
+    = Loading GuestSession
+    | Guest GuestSession
     | User UserSession
 
 
-initGuest : Flags -> Nav.Key -> String -> Session
-initGuest flags key path =
-    Guest
+initLoading : Flags -> Nav.Key -> String -> Session
+initLoading flags key path =
+    Loading
         { key = key
         , flags = flags
         , path = path
         , cookies = Dict.empty
         }
+
+
+initGuest : GuestSession -> Session
+initGuest guestSession =
+    Guest guestSession
 
 
 initUser : GuestSession -> String -> String -> String -> String -> Session
@@ -90,6 +96,9 @@ initUser guest jwt id firstName lastName =
 navKey : Session -> Nav.Key
 navKey session =
     case session of
+        Loading { key } ->
+            key
+
         Guest { key } ->
             key
 
@@ -100,6 +109,9 @@ navKey session =
 apiUrl : Session -> String
 apiUrl session =
     case session of
+        Loading guest ->
+            guest.flags.apiUrl
+
         Guest guest ->
             guest.flags.apiUrl
 
@@ -110,6 +122,10 @@ apiUrl session =
 updateSessionWithCookie : Cookie -> Session -> Session
 updateSessionWithCookie ( key, value ) session =
     case session of
+        Loading guest ->
+            Loading
+                { guest | cookies = Dict.insert key value guest.cookies }
+
         Guest guest ->
             Guest
                 { guest | cookies = Dict.insert key value guest.cookies }
@@ -122,6 +138,10 @@ updateSessionWithCookie ( key, value ) session =
 updateSessionPath : Url.Url -> Session -> Session
 updateSessionPath url session =
     case session of
+        Loading guest ->
+            Loading
+                { guest | path = url.path }
+
         Guest guest ->
             Guest
                 { guest | path = url.path }
@@ -134,6 +154,9 @@ updateSessionPath url session =
 pathFromSession : Session -> String
 pathFromSession session =
     case session of
+        Loading guest ->
+            guest.path
+
         Guest guest ->
             guest.path
 
@@ -144,6 +167,11 @@ pathFromSession session =
 sessionToCookieToken : Session -> String
 sessionToCookieToken session =
     case session of
+        Loading guest ->
+            guest.cookies
+                |> Dict.get "session"
+                |> Maybe.withDefault ""
+
         Guest guest ->
             guest.cookies
                 |> Dict.get "session"
@@ -157,37 +185,45 @@ sessionToCookieToken session =
 
 updateSessionWithJson : Session -> JsonResponse badResponse AuthResponse -> Session
 updateSessionWithJson session response =
-    case response of
-        JsonSuccess res ->
-            updateSessionVariant res session
+    case session of
+        Loading guest ->
+            case response of
+                JsonSuccess res ->
+                    initUser
+                        guest
+                        res.token
+                        res.record.id
+                        res.record.firstName
+                        res.record.lastName
 
-        _ ->
+                _ ->
+                    initGuest guest
+
+        Guest guest ->
+            case response of
+                JsonSuccess res ->
+                    initUser
+                        guest
+                        res.token
+                        res.record.id
+                        res.record.firstName
+                        res.record.lastName
+
+                _ ->
+                    session
+
+        User _ ->
             session
 
 
-updateSessionVariant : AuthResponse -> Session -> Session
-updateSessionVariant authResponse session =
+forceGuestSession : Session -> Session
+forceGuestSession session =
     case session of
-        Guest guest ->
-            initUser
-                guest
-                authResponse.token
-                authResponse.record.id
-                authResponse.record.firstName
-                authResponse.record.lastName
+        Loading guest ->
+            initGuest guest
 
-        User user ->
-            User user
-
-
-isUserAuth : Session -> Bool
-isUserAuth session =
-    case session of
-        Guest _ ->
-            False
-
-        User _ ->
-            True
+        _ ->
+            session
 
 
 rememberMe : Bool -> Int
