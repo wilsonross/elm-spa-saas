@@ -26,7 +26,7 @@ import Url
 
 
 type alias Cookie =
-    ( String, String )
+    ( String, String, Int )
 
 
 type alias Flags =
@@ -122,7 +122,7 @@ apiUrl session =
 
 
 updateSessionWithCookie : Cookie -> Session -> Session
-updateSessionWithCookie ( key, value ) session =
+updateSessionWithCookie ( key, value, expiry ) session =
     case session of
         Loading guest ->
             Loading
@@ -230,10 +230,15 @@ forceGuestSession session =
             session
 
 
+daysToMs : Int -> Int
+daysToMs days =
+    days * 24 * 60 * 60 * 1000
+
+
 rememberMe : Bool -> Int
 rememberMe remember =
     if remember then
-        30
+        daysToMs 30
 
     else
         0

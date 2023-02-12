@@ -14,7 +14,7 @@ port setSession : ( String, Int ) -> Cmd msg
 port getSession : () -> Cmd msg
 
 
-port recieveSession : (( String, String ) -> msg) -> Sub msg
+port recieveSession : (( String, String, Int ) -> msg) -> Sub msg
 
 
 

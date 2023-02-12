@@ -21,15 +21,14 @@ app.ports.getSession.subscribe(() => {
   });
 });
 
-function setCookie(key, token, daysUntilExpiry) {
+function setCookie(key, token, msUntilExpiry) {
   const date = new Date();
-  const msUntilExpiry = daysUntilExpiry * 24 * 60 * 60 * 1000;
   const secure = "SameSite=strict;Secure;path=/";
 
   date.setTime(date.getTime() + msUntilExpiry);
 
   document.cookie = `${key}=${token};Expires=${
-    daysUntilExpiry === 0 ? "0" : date.toUTCString()
+    msUntilExpiry === 0 ? 0 : date.toUTCString()
   };${secure}`;
 }
 
@@ -37,15 +36,30 @@ function getCookie(key, callback) {
   const name = `${key}=`;
   const decodedCookie = decodeURIComponent(document.cookie);
   const cookieComponents = decodedCookie.split(";");
-  let token = "";
 
-  cookieComponents.forEach((component) => {
-    if (!component.includes(name)) {
+  const [token, expiry] = parseCookieComponents(name, cookieComponents);
+
+  callback([key, token, expiry]);
+}
+
+function parseCookieComponents(name, components) {
+  let token = "";
+  let expiry = 0;
+
+  components.forEach((component) => {
+    if (component.includes(name)) {
+      token = component.split("=")[1];
       return;
     }
 
-    token = component.split("=")[1];
+    if (component.includes("Expires")) {
+      const expiryStr = component.split("=")[1];
+      const futureDateMs = new Date(expiryStr).getTime();
+      const currentDateMs = new Date().getTime();
+
+      expiry = futureDateMs - currentDateMs;
+    }
   });
 
-  callback([key, token]);
+  return [token, expiry];
 }
