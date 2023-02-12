@@ -76,6 +76,7 @@ type Msg
     = GotRegisterResponse ResponseResult
     | GotLoginResponse ResponseResult
     | Register
+    | Login
     | EmailChanged String
     | PasswordChanged String
     | FirstNameChanged String
@@ -103,6 +104,15 @@ update msg model =
                 model.passwordConfirm
                 model.firstName
                 model.lastName
+            )
+
+        Login ->
+            ( { model | loginResponse = Loading }
+            , Auth.authWithPassword
+                GotLoginResponse
+                model.session
+                model.email
+                model.password
             )
 
         EmailChanged email ->
@@ -139,9 +149,8 @@ updateWithRegisterResponse : ResponseResult -> Model -> ( Model, Cmd Msg )
 updateWithRegisterResponse result model =
     case result of
         Ok ( _, res ) ->
-            ( { model | registerResponse = Response (stringToRegisterJson res) }
-            , cmdOnRegisterSuccess (Response (stringToRegisterJson res)) model
-            )
+            updateWithLogin
+                { model | registerResponse = Response (stringToRegisterJson res) }
 
         Err err ->
             updateWithError err model
@@ -189,23 +198,19 @@ updateWithError err model =
             )
 
 
-cmdOnRegisterSuccess : Status RegisterJsonResponse -> Model -> Cmd Msg
-cmdOnRegisterSuccess status model =
-    case status of
+updateWithLogin : Model -> ( Model, Cmd Msg )
+updateWithLogin model =
+    case model.registerResponse of
         Response jsonResponse ->
             case jsonResponse of
                 JsonSuccess _ ->
-                    Auth.authWithPassword
-                        GotLoginResponse
-                        model.session
-                        model.email
-                        model.password
+                    update Login model
 
                 _ ->
-                    Cmd.none
+                    ( model, Cmd.none )
 
         _ ->
-            Cmd.none
+            ( model, Cmd.none )
 
 
 cmdOnAuthSuccess : Status AuthJsonResponse -> Model -> Cmd msg
@@ -275,21 +280,6 @@ viewForm model =
         ]
 
 
-isLoading : Status a -> Status b -> Status c
-isLoading register login =
-    case register of
-        Loading ->
-            Loading
-
-        _ ->
-            case login of
-                Loading ->
-                    Loading
-
-                _ ->
-                    None
-
-
 viewNameInput : Model -> Html Msg
 viewNameInput model =
     div [ class "flex gap-6 mb-6" ]
@@ -338,6 +328,15 @@ stringToRegisterJson str =
         decodeRegisterErrorData
         Response.decodeUserResponse
         str
+
+
+isLoading : Status a -> Status b -> Status c
+isLoading registerStatus loginStatus =
+    if registerStatus == Loading || loginStatus == Loading then
+        Loading
+
+    else
+        None
 
 
 
