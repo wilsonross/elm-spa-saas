@@ -6,7 +6,7 @@ import Html exposing (Html, div, form)
 import Html.Attributes exposing (class, name, type_)
 import Input exposing (Input(..), viewCheckbox, viewStatefulInput)
 import Port
-import Request exposing (Status(..))
+import Request exposing (Status(..), viewPreloader)
 import Response
     exposing
         ( AuthErrorData
@@ -209,7 +209,8 @@ viewForm model =
     form
         [ class <|
             "bg-white max-w-md w-full shadow-portal px-[1.25rem] pt-[3.125rem]"
-                ++ " pb-[4.059rem] sm:px-10"
+                ++ " pb-[4.059rem] sm:px-10 relative rounded-md"
+                ++ " overflow-hidden"
         ]
         [ viewAuthLogo
         , viewTitle "Log in"
@@ -225,6 +226,7 @@ viewForm model =
         , viewAdditional
         , viewLoginButton
         , viewAlternative "Don't have an account?" "Sign up" "now" "/register"
+        , viewPreloader model.response
         ]
 
 

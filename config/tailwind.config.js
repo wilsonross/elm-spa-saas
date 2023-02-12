@@ -21,6 +21,7 @@ module.exports = {
       animation: {
         carousel: "carousel 17s linear infinite",
         errors: "errors 3s linear 1",
+        spin: "spin 1s infinite ease",
       },
       keyframes: {
         carousel: {

@@ -13,7 +13,7 @@ import Input
 import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Pipeline exposing (optional)
 import Port
-import Request exposing (Status(..))
+import Request exposing (Status(..), viewPreloader)
 import Response
     exposing
         ( AuthJsonResponse
@@ -253,7 +253,7 @@ viewForm model =
     form
         [ class <|
             "bg-white max-w-md w-full shadow-portal px-[1.25rem] pt-[3.125rem]"
-                ++ " pb-[4.059rem] sm:px-10"
+                ++ " pb-[4.059rem] sm:px-10 rounded-md relative"
         ]
         [ viewAuthLogo
         , viewTitle "Sign Up"
@@ -271,7 +271,23 @@ viewForm model =
         , viewAdditional
         , viewRegisterButton
         , viewAlternative "Already have an account?" "Sign in" "now" "/login"
+        , viewPreloader (isLoading model.registerResponse model.loginResponse)
         ]
+
+
+isLoading : Status a -> Status b -> Status c
+isLoading register login =
+    case register of
+        Loading ->
+            Loading
+
+        _ ->
+            case login of
+                Loading ->
+                    Loading
+
+                _ ->
+                    None
 
 
 viewNameInput : Model -> Html Msg

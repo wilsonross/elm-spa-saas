@@ -30,6 +30,7 @@ import Html.Events exposing (custom)
 import Json.Decode as Decode
 import List exposing (length)
 import Process
+import Request exposing (Status(..))
 import Response exposing (ErrorMessage)
 import Task
 
