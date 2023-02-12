@@ -78,6 +78,7 @@ type alias UserResponse =
     { collectionId : String
     , collectionName : String
     , created : String
+    , email : String
     , emailVisibility : Bool
     , firstName : String
     , id : String
@@ -94,6 +95,7 @@ decodeUserResponse =
         |> required "collectionId" string
         |> required "collectionName" string
         |> required "created" string
+        |> optional "email" string ""
         |> required "emailVisibility" bool
         |> required "firstName" string
         |> required "id" string

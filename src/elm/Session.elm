@@ -49,6 +49,7 @@ type alias UserSession =
     , cookies : Dict String String
     , jwt : String
     , id : String
+    , email : String
     , firstName : String
     , lastName : String
     }
@@ -75,14 +76,15 @@ initGuest guestSession =
     Guest guestSession
 
 
-initUser : GuestSession -> String -> String -> String -> String -> Session
-initUser guest jwt id firstName lastName =
+initUser : GuestSession -> String -> String -> String -> String -> String -> Session
+initUser guest jwt id email firstName lastName =
     User
         { key = guest.key
         , flags = guest.flags
         , path = guest.path
         , cookies = guest.cookies
         , jwt = jwt
+        , email = email
         , id = id
         , firstName = firstName
         , lastName = lastName
@@ -193,6 +195,7 @@ updateSessionWithJson session response =
                         guest
                         res.token
                         res.record.id
+                        res.record.email
                         res.record.firstName
                         res.record.lastName
 
@@ -206,6 +209,7 @@ updateSessionWithJson session response =
                         guest
                         res.token
                         res.record.id
+                        res.record.email
                         res.record.firstName
                         res.record.lastName
 

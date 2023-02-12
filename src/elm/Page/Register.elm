@@ -150,7 +150,9 @@ updateWithRegisterResponse result model =
     case result of
         Ok ( _, res ) ->
             updateWithLogin
-                { model | registerResponse = Response (stringToRegisterJson res) }
+                { model
+                    | registerResponse = Response (stringToRegisterJson res)
+                }
 
         Err err ->
             updateWithError err model
