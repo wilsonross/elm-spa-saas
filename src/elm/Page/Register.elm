@@ -1,6 +1,7 @@
 module Page.Register exposing (Model, Msg, init, update, view)
 
 import Auth
+import Browser.Navigation as Nav
 import Html exposing (Html, div, form)
 import Html.Attributes exposing (class, name, type_)
 import Input
@@ -11,10 +12,12 @@ import Input
         )
 import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Pipeline exposing (optional)
+import Port
 import Request exposing (Status(..))
 import Response
     exposing
-        ( ErrorDetailed(..)
+        ( AuthResponse
+        , ErrorDetailed(..)
         , ErrorMessage
         , JsonResponse(..)
         , ResponseResult
@@ -38,7 +41,8 @@ import View
 
 type alias Model =
     { session : Session
-    , response : Status RegisterJsonResponse
+    , registerResponse : Status RegisterJsonResponse
+    , loginResponse : Status LoginJsonResponse
     , email : Input
     , password : Input
     , passwordConfirm : Input
@@ -51,7 +55,8 @@ type alias Model =
 init : Session -> ( Model, Cmd Msg )
 init session =
     ( { session = session
-      , response = None
+      , registerResponse = None
+      , loginResponse = None
       , email = Empty
       , password = Empty
       , passwordConfirm = Empty
@@ -69,6 +74,7 @@ init session =
 
 type Msg
     = GotRegisterResponse ResponseResult
+    | GotLoginResponse ResponseResult
     | Register
     | EmailChanged String
     | PasswordChanged String
@@ -82,10 +88,13 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         GotRegisterResponse res ->
-            updateWithResponse res model
+            updateWithRegisterResponse res model
+
+        GotLoginResponse res ->
+            updateWithLoginResponse res model
 
         Register ->
-            ( { model | response = Loading }
+            ( { model | registerResponse = Loading }
             , Auth.create
                 GotRegisterResponse
                 model.session
@@ -123,15 +132,33 @@ update msg model =
             ( { model | remember = remember }, Cmd.none )
 
         ResetErrorResponse ->
-            ( { model | response = None }, Cmd.none )
+            ( { model | registerResponse = None }, Cmd.none )
 
 
-updateWithResponse : ResponseResult -> Model -> ( Model, Cmd Msg )
-updateWithResponse result model =
+updateWithRegisterResponse : ResponseResult -> Model -> ( Model, Cmd Msg )
+updateWithRegisterResponse result model =
     case result of
         Ok ( _, res ) ->
-            ( { model | response = Response (stringToJson res) }
-            , Cmd.none
+            ( { model | registerResponse = Response (stringToRegisterJson res) }
+            , cmdOnRegisterSuccess (Response (stringToRegisterJson res)) model
+            )
+
+        Err err ->
+            updateWithError err model
+
+
+updateWithLoginResponse : ResponseResult -> Model -> ( Model, Cmd Msg )
+updateWithLoginResponse result model =
+    case result of
+        Ok ( _, res ) ->
+            ( { model
+                | loginResponse = Response (stringToLoginJson res)
+                , session =
+                    Session.updateSessionWithJson
+                        model.session
+                        (stringToLoginJson res)
+              }
+            , cmdOnLoginSuccess (Response (stringToLoginJson res)) model
             )
 
         Err err ->
@@ -144,22 +171,62 @@ updateWithError err model =
         BadStatus _ res ->
             ( let
                 response =
-                    Response (stringToJson res)
+                    Response (stringToRegisterJson res)
               in
               { model
-                | response = response
-                , email = responseToInput (\data -> data.email) model.email response
-                , password = responseToInput (\data -> data.password) model.password response
-                , firstName = responseToInput (\data -> data.firstName) model.firstName response
-                , lastName = responseToInput (\data -> data.lastName) model.lastName response
+                | registerResponse = response
+                , email = responseToRegisterInput (\data -> data.email) model.email response
+                , password = responseToRegisterInput (\data -> data.password) model.password response
+                , firstName = responseToRegisterInput (\data -> data.firstName) model.firstName response
+                , lastName = responseToRegisterInput (\data -> data.lastName) model.lastName response
               }
             , View.delay 2500 ResetErrorResponse
             )
 
         _ ->
-            ( { model | response = Failure }
+            ( { model | registerResponse = Failure }
             , View.delay 2500 ResetErrorResponse
             )
+
+
+cmdOnRegisterSuccess : Status RegisterJsonResponse -> Model -> Cmd Msg
+cmdOnRegisterSuccess status model =
+    case status of
+        Response jsonResponse ->
+            case jsonResponse of
+                JsonSuccess _ ->
+                    Auth.authWithPassword
+                        GotLoginResponse
+                        model.session
+                        model.email
+                        model.password
+
+                _ ->
+                    Cmd.none
+
+        _ ->
+            Cmd.none
+
+
+cmdOnLoginSuccess : Status LoginJsonResponse -> Model -> Cmd msg
+cmdOnLoginSuccess status model =
+    case status of
+        Response jsonResponse ->
+            case jsonResponse of
+                JsonSuccess res ->
+                    Cmd.batch
+                        [ Port.setSession
+                            ( res.token, Session.rememberMe model.remember )
+                        , Nav.pushUrl
+                            (Session.navKey model.session)
+                            "/account"
+                        ]
+
+                _ ->
+                    Cmd.none
+
+        _ ->
+            Cmd.none
 
 
 
@@ -175,7 +242,8 @@ view model =
                 "flex justify-center items-center h-screen rounded-md px-4"
             ]
             [ viewForm model
-            , errorsFromStatus model.response |> viewErrors
+            , errorsFromRegisterStatus model.registerResponse |> viewErrors
+            , errorsFromLoginStatus model.loginResponse |> viewErrors
             ]
     }
 
@@ -248,11 +316,19 @@ checkEmail email =
     String.contains "@" email && String.contains "." email
 
 
-stringToJson : String -> RegisterJsonResponse
-stringToJson str =
+stringToRegisterJson : String -> RegisterJsonResponse
+stringToRegisterJson str =
     Response.stringToJson
-        decodeErrorData
+        decodeRegisterErrorData
         Response.decodeUserResponse
+        str
+
+
+stringToLoginJson : String -> LoginJsonResponse
+stringToLoginJson str =
+    Response.stringToJson
+        decodeLoginErrorData
+        Response.decodeAuthResponse
         str
 
 
@@ -260,8 +336,8 @@ stringToJson str =
 -- ERROR HELPERS
 
 
-createErrorList : List ErrorMessage -> ErrorData -> List ErrorMessage
-createErrorList list errorData =
+createRegisterErrorList : List ErrorMessage -> RegisterErrorData -> List ErrorMessage
+createRegisterErrorList list errorData =
     Response.prependMaybeError errorData.email list
         |> Response.prependMaybeError errorData.password
         |> Response.prependMaybeError errorData.passwordConfirm
@@ -269,8 +345,14 @@ createErrorList list errorData =
         |> Response.prependMaybeError errorData.lastName
 
 
-statusToMaybeError : Status RegisterJsonResponse -> Maybe ErrorData
-statusToMaybeError status =
+createLoginErrorList : List ErrorMessage -> LoginErrorData -> List ErrorMessage
+createLoginErrorList list errorData =
+    Response.prependMaybeError errorData.identity list
+        |> Response.prependMaybeError errorData.password
+
+
+statusToMaybeRegisterError : Status RegisterJsonResponse -> Maybe RegisterErrorData
+statusToMaybeRegisterError status =
     case status of
         Response jsonResponse ->
             case jsonResponse of
@@ -284,8 +366,8 @@ statusToMaybeError status =
             Nothing
 
 
-errorsFromStatus : Status RegisterJsonResponse -> List ErrorMessage
-errorsFromStatus status =
+errorsFromRegisterStatus : Status RegisterJsonResponse -> List ErrorMessage
+errorsFromRegisterStatus status =
     case status of
         Failure ->
             [ Response.unknownError ]
@@ -293,7 +375,7 @@ errorsFromStatus status =
         Response jsonResponse ->
             case jsonResponse of
                 JsonError err ->
-                    createErrorList [] err.data
+                    createRegisterErrorList [] err.data
 
                 JsonSuccess _ ->
                     []
@@ -305,9 +387,30 @@ errorsFromStatus status =
             []
 
 
-responseToInput : (ErrorData -> Maybe ErrorMessage) -> Input -> Status RegisterJsonResponse -> Input
-responseToInput errToMessage currentInput status =
-    case statusToMaybeError status of
+errorsFromLoginStatus : Status LoginJsonResponse -> List ErrorMessage
+errorsFromLoginStatus status =
+    case status of
+        Failure ->
+            [ Response.unknownError ]
+
+        Response jsonResponse ->
+            case jsonResponse of
+                JsonError err ->
+                    createLoginErrorList [] err.data
+
+                JsonSuccess _ ->
+                    []
+
+                JsonNone _ ->
+                    [ Response.unknownError ]
+
+        _ ->
+            []
+
+
+responseToRegisterInput : (RegisterErrorData -> Maybe ErrorMessage) -> Input -> Status RegisterJsonResponse -> Input
+responseToRegisterInput errToMessage currentInput status =
+    case statusToMaybeRegisterError status of
         Just err ->
             case errToMessage err of
                 Just _ ->
@@ -325,10 +428,14 @@ responseToInput errToMessage currentInput status =
 
 
 type alias RegisterJsonResponse =
-    JsonResponse ErrorData UserResponse
+    JsonResponse RegisterErrorData UserResponse
 
 
-type alias ErrorData =
+type alias LoginJsonResponse =
+    JsonResponse LoginErrorData AuthResponse
+
+
+type alias RegisterErrorData =
     { email : Maybe ErrorMessage
     , password : Maybe ErrorMessage
     , passwordConfirm : Maybe ErrorMessage
@@ -337,15 +444,32 @@ type alias ErrorData =
     }
 
 
-decodeErrorData : Decoder ErrorData
-decodeErrorData =
+type alias LoginErrorData =
+    { identity : Maybe ErrorMessage
+    , password : Maybe ErrorMessage
+    }
+
+
+decodeRegisterErrorData : Decoder RegisterErrorData
+decodeRegisterErrorData =
     let
         decoder =
             Response.decodeErrorMessage
     in
-    Decode.succeed ErrorData
+    Decode.succeed RegisterErrorData
         |> optional "email" (Decode.map Just decoder) Nothing
         |> optional "password" (Decode.map Just decoder) Nothing
         |> optional "passwordConfirm" (Decode.map Just decoder) Nothing
         |> optional "firstName" (Decode.map Just decoder) Nothing
         |> optional "lastName" (Decode.map Just decoder) Nothing
+
+
+decodeLoginErrorData : Decoder LoginErrorData
+decodeLoginErrorData =
+    let
+        decoder =
+            Response.decodeErrorMessage
+    in
+    Decode.succeed LoginErrorData
+        |> optional "identity" (Decode.map Just decoder) Nothing
+        |> optional "password" (Decode.map Just decoder) Nothing
