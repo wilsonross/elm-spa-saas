@@ -1,24 +1,29 @@
 module Response exposing
-    ( AuthResponse
+    ( AuthErrorData
+    , AuthJsonResponse
+    , AuthResponse
     , ErrorDetailed(..)
     , ErrorMessage
     , ErrorResponse
     , JsonResponse(..)
     , ResponseResult
     , UserResponse
+    , decodeAuthErrorData
     , decodeAuthResponse
     , decodeErrorMessage
     , decodeErrorResponse
     , decodeUserResponse
+    , errorsFromAuthStatus
     , expectStringDetailed
     , prependMaybeError
+    , stringToAuthJson
     , stringToJson
     , unknownError
     )
 
 import Http exposing (Expect, Metadata, Response)
 import Json.Decode as Decode exposing (Decoder, Error, bool, int, string)
-import Json.Decode.Pipeline exposing (required)
+import Json.Decode.Pipeline exposing (optional, required)
 import Request exposing (Status(..))
 
 
@@ -184,3 +189,59 @@ decodeAuthResponse =
     Decode.succeed AuthResponse
         |> required "record" decodeUserResponse
         |> required "token" string
+
+
+type alias AuthJsonResponse =
+    JsonResponse AuthErrorData AuthResponse
+
+
+type alias AuthErrorData =
+    { identity : Maybe ErrorMessage
+    , password : Maybe ErrorMessage
+    }
+
+
+decodeAuthErrorData : Decoder AuthErrorData
+decodeAuthErrorData =
+    let
+        decoder =
+            decodeErrorMessage
+    in
+    Decode.succeed AuthErrorData
+        |> optional "identity" (Decode.map Just decoder) Nothing
+        |> optional "password" (Decode.map Just decoder) Nothing
+
+
+stringToAuthJson : String -> AuthJsonResponse
+stringToAuthJson str =
+    stringToJson
+        decodeAuthErrorData
+        decodeAuthResponse
+        str
+
+
+errorsFromAuthStatus : Status AuthJsonResponse -> List ErrorMessage
+errorsFromAuthStatus status =
+    case status of
+        Failure ->
+            [ unknownError ]
+
+        Response jsonResponse ->
+            case jsonResponse of
+                JsonError err ->
+                    createAuthErrorList [] err.data
+
+                JsonSuccess _ ->
+                    []
+
+                JsonNone _ ->
+                    [ unknownError ]
+
+        _ ->
+            []
+
+
+createAuthErrorList : List ErrorMessage -> AuthErrorData -> List ErrorMessage
+createAuthErrorList list errorData =
+    prependMaybeError errorData.identity list
+        |> prependMaybeError errorData.password

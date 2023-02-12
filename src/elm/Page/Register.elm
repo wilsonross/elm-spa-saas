@@ -16,7 +16,7 @@ import Port
 import Request exposing (Status(..))
 import Response
     exposing
-        ( AuthResponse
+        ( AuthJsonResponse
         , ErrorDetailed(..)
         , ErrorMessage
         , JsonResponse(..)
@@ -42,7 +42,7 @@ import View
 type alias Model =
     { session : Session
     , registerResponse : Status RegisterJsonResponse
-    , loginResponse : Status LoginJsonResponse
+    , loginResponse : Status AuthJsonResponse
     , email : Input
     , password : Input
     , passwordConfirm : Input
@@ -152,13 +152,13 @@ updateWithLoginResponse result model =
     case result of
         Ok ( _, res ) ->
             ( { model
-                | loginResponse = Response (stringToLoginJson res)
+                | loginResponse = Response (Response.stringToAuthJson res)
                 , session =
                     Session.updateSessionWithJson
                         model.session
-                        (stringToLoginJson res)
+                        (Response.stringToAuthJson res)
               }
-            , cmdOnLoginSuccess (Response (stringToLoginJson res)) model
+            , cmdOnLoginSuccess (Response (Response.stringToAuthJson res)) model
             )
 
         Err err ->
@@ -208,7 +208,7 @@ cmdOnRegisterSuccess status model =
             Cmd.none
 
 
-cmdOnLoginSuccess : Status LoginJsonResponse -> Model -> Cmd msg
+cmdOnLoginSuccess : Status AuthJsonResponse -> Model -> Cmd msg
 cmdOnLoginSuccess status model =
     case status of
         Response jsonResponse ->
@@ -243,7 +243,7 @@ view model =
             ]
             [ viewForm model
             , errorsFromRegisterStatus model.registerResponse |> viewErrors
-            , errorsFromLoginStatus model.loginResponse |> viewErrors
+            , Response.errorsFromAuthStatus model.loginResponse |> viewErrors
             ]
     }
 
@@ -324,14 +324,6 @@ stringToRegisterJson str =
         str
 
 
-stringToLoginJson : String -> LoginJsonResponse
-stringToLoginJson str =
-    Response.stringToJson
-        decodeLoginErrorData
-        Response.decodeAuthResponse
-        str
-
-
 
 -- ERROR HELPERS
 
@@ -343,12 +335,6 @@ createRegisterErrorList list errorData =
         |> Response.prependMaybeError errorData.passwordConfirm
         |> Response.prependMaybeError errorData.firstName
         |> Response.prependMaybeError errorData.lastName
-
-
-createLoginErrorList : List ErrorMessage -> LoginErrorData -> List ErrorMessage
-createLoginErrorList list errorData =
-    Response.prependMaybeError errorData.identity list
-        |> Response.prependMaybeError errorData.password
 
 
 statusToMaybeRegisterError : Status RegisterJsonResponse -> Maybe RegisterErrorData
@@ -387,27 +373,6 @@ errorsFromRegisterStatus status =
             []
 
 
-errorsFromLoginStatus : Status LoginJsonResponse -> List ErrorMessage
-errorsFromLoginStatus status =
-    case status of
-        Failure ->
-            [ Response.unknownError ]
-
-        Response jsonResponse ->
-            case jsonResponse of
-                JsonError err ->
-                    createLoginErrorList [] err.data
-
-                JsonSuccess _ ->
-                    []
-
-                JsonNone _ ->
-                    [ Response.unknownError ]
-
-        _ ->
-            []
-
-
 responseToRegisterInput : (RegisterErrorData -> Maybe ErrorMessage) -> Input -> Status RegisterJsonResponse -> Input
 responseToRegisterInput errToMessage currentInput status =
     case statusToMaybeRegisterError status of
@@ -431,22 +396,12 @@ type alias RegisterJsonResponse =
     JsonResponse RegisterErrorData UserResponse
 
 
-type alias LoginJsonResponse =
-    JsonResponse LoginErrorData AuthResponse
-
-
 type alias RegisterErrorData =
     { email : Maybe ErrorMessage
     , password : Maybe ErrorMessage
     , passwordConfirm : Maybe ErrorMessage
     , firstName : Maybe ErrorMessage
     , lastName : Maybe ErrorMessage
-    }
-
-
-type alias LoginErrorData =
-    { identity : Maybe ErrorMessage
-    , password : Maybe ErrorMessage
     }
 
 
@@ -462,14 +417,3 @@ decodeRegisterErrorData =
         |> optional "passwordConfirm" (Decode.map Just decoder) Nothing
         |> optional "firstName" (Decode.map Just decoder) Nothing
         |> optional "lastName" (Decode.map Just decoder) Nothing
-
-
-decodeLoginErrorData : Decoder LoginErrorData
-decodeLoginErrorData =
-    let
-        decoder =
-            Response.decodeErrorMessage
-    in
-    Decode.succeed LoginErrorData
-        |> optional "identity" (Decode.map Just decoder) Nothing
-        |> optional "password" (Decode.map Just decoder) Nothing

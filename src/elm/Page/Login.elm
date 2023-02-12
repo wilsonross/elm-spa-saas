@@ -5,13 +5,12 @@ import Browser.Navigation as Nav
 import Html exposing (Html, div, form)
 import Html.Attributes exposing (class, name, type_)
 import Input exposing (Input(..), viewCheckbox, viewStatefulInput)
-import Json.Decode as Decode exposing (Decoder)
-import Json.Decode.Pipeline exposing (optional)
 import Port
 import Request exposing (Status(..))
 import Response
     exposing
-        ( AuthResponse
+        ( AuthErrorData
+        , AuthJsonResponse
         , ErrorDetailed(..)
         , ErrorMessage
         , JsonResponse(..)
@@ -36,7 +35,7 @@ import View
 
 type alias Model =
     { session : Session
-    , response : Status LoginJsonResponse
+    , response : Status AuthJsonResponse
     , identity : Input
     , password : Input
     , remember : Bool
@@ -105,20 +104,20 @@ updateWithResponse result model =
     case result of
         Ok ( _, res ) ->
             ( { model
-                | response = Response (stringToJson res)
+                | response = Response (Response.stringToAuthJson res)
                 , session =
                     Session.updateSessionWithJson
                         model.session
-                        (stringToJson res)
+                        (Response.stringToAuthJson res)
               }
-            , cmdOnSuccess (Response (stringToJson res)) model
+            , cmdOnSuccess (Response (Response.stringToAuthJson res)) model
             )
 
         Err err ->
             updateWithError err model
 
 
-cmdOnSuccess : Status LoginJsonResponse -> Model -> Cmd msg
+cmdOnSuccess : Status AuthJsonResponse -> Model -> Cmd msg
 cmdOnSuccess status model =
     case status of
         Response jsonResponse ->
@@ -145,7 +144,7 @@ updateWithError err model =
         BadStatus _ res ->
             ( let
                 response =
-                    Response (stringToJson res)
+                    Response (Response.stringToAuthJson res)
               in
               { model
                 | response = response
@@ -162,28 +161,10 @@ updateWithError err model =
 
 
 
--- HELPERS
-
-
-stringToJson : String -> LoginJsonResponse
-stringToJson str =
-    Response.stringToJson
-        decodeErrorData
-        Response.decodeAuthResponse
-        str
-
-
-
 -- ERROR HELPERS
 
 
-createErrorList : List ErrorMessage -> ErrorData -> List ErrorMessage
-createErrorList list errorData =
-    Response.prependMaybeError errorData.identity list
-        |> Response.prependMaybeError errorData.password
-
-
-statusToMaybeError : Status LoginJsonResponse -> Maybe ErrorData
+statusToMaybeError : Status AuthJsonResponse -> Maybe AuthErrorData
 statusToMaybeError status =
     case status of
         Response jsonResponse ->
@@ -198,28 +179,7 @@ statusToMaybeError status =
             Nothing
 
 
-errorsFromStatus : Status LoginJsonResponse -> List ErrorMessage
-errorsFromStatus status =
-    case status of
-        Failure ->
-            [ Response.unknownError ]
-
-        Response jsonResponse ->
-            case jsonResponse of
-                JsonError err ->
-                    createErrorList [] err.data
-
-                JsonSuccess _ ->
-                    []
-
-                JsonNone _ ->
-                    [ Response.unknownError ]
-
-        _ ->
-            []
-
-
-responseToInput : (ErrorData -> Maybe ErrorMessage) -> Input -> Status LoginJsonResponse -> Input
+responseToInput : (AuthErrorData -> Maybe ErrorMessage) -> Input -> Status AuthJsonResponse -> Input
 responseToInput errToMessage currentInput status =
     case statusToMaybeError status of
         Just err ->
@@ -232,21 +192,6 @@ responseToInput errToMessage currentInput status =
 
         Nothing ->
             currentInput
-
-
-responseToToken : Status LoginJsonResponse -> String
-responseToToken status =
-    case status of
-        Response jsonResponse ->
-            case jsonResponse of
-                JsonSuccess res ->
-                    res.token
-
-                _ ->
-                    ""
-
-        _ ->
-            ""
 
 
 
@@ -262,7 +207,7 @@ view model =
                 "flex justify-center items-center h-screen rounded-md px-4"
             ]
             [ viewForm model
-            , errorsFromStatus model.response |> viewErrors
+            , Response.errorsFromAuthStatus model.response |> viewErrors
             ]
     }
 
@@ -310,28 +255,3 @@ viewAdditional =
 viewLoginButton : Html Msg
 viewLoginButton =
     viewButtonImage [ class "w-full mb-4" ] Login "/static/img/signin.svg"
-
-
-
--- JSON
-
-
-type alias LoginJsonResponse =
-    JsonResponse ErrorData AuthResponse
-
-
-type alias ErrorData =
-    { identity : Maybe ErrorMessage
-    , password : Maybe ErrorMessage
-    }
-
-
-decodeErrorData : Decoder ErrorData
-decodeErrorData =
-    let
-        decoder =
-            Response.decodeErrorMessage
-    in
-    Decode.succeed ErrorData
-        |> optional "identity" (Decode.map Just decoder) Nothing
-        |> optional "password" (Decode.map Just decoder) Nothing
