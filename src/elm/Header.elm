@@ -188,13 +188,22 @@ viewAuthLinks : Session -> Html Msg
 viewAuthLinks session =
     case session of
         Session.Loading _ ->
-            text ""
+            viewPlaceholderLinks
 
         Guest _ ->
             viewUnauthenticatedLinks
 
         User _ ->
             viewAuthenticatedLinks
+
+
+viewPlaceholderLinks : Html msg
+viewPlaceholderLinks =
+    div
+        [ class "flex gap-6 sm:gap-9" ]
+        [ div [ class "w-[41px] h-[18px] rounded-md animate-skeleton" ] []
+        , div [ class "w-[61px] h-[18px] rounded-md animate-skeleton" ] []
+        ]
 
 
 viewAuthenticatedLinks : Html msg

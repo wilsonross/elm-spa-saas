@@ -22,6 +22,7 @@ module.exports = {
         carousel: "carousel 17s linear infinite",
         errors: "errors 3s linear 1",
         spin: "spin 1s infinite ease",
+        skeleton: "skeleton 0.6s linear infinite alternate",
       },
       keyframes: {
         carousel: {
@@ -40,6 +41,14 @@ module.exports = {
           "95%, 100%": {
             transform: "translate(-50%, 200%) scale(0.8)",
             opacity: "0",
+          },
+        },
+        skeleton: {
+          from: {
+            backgroundColor: "rgba(242, 243, 246, 1)",
+          },
+          to: {
+            backgroundColor: "rgba(242, 243, 246, 0.4)",
           },
         },
       },
