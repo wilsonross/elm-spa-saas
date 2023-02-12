@@ -3,6 +3,7 @@ module Input exposing
     , canSubmit
     , encodeInput
     , inputBorder
+    , invalidate
     , stringFromInput
     , valueToInput
     , viewCheckbox
@@ -85,6 +86,11 @@ encodeInput encodingData =
             (\( key, value ) -> ( key, Encode.string <| stringFromInput value ))
             encodingData
         )
+
+
+invalidate : Input -> Input
+invalidate input =
+    Invalid (stringFromInput input)
 
 
 

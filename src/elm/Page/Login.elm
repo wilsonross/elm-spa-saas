@@ -181,17 +181,9 @@ statusToMaybeError status =
 
 responseToInput : (AuthErrorData -> Maybe ErrorMessage) -> Input -> Status AuthJsonResponse -> Input
 responseToInput errToMessage currentInput status =
-    case statusToMaybeError status of
-        Just err ->
-            case errToMessage err of
-                Just _ ->
-                    Invalid (Input.stringFromInput currentInput)
-
-                Nothing ->
-                    currentInput
-
-        Nothing ->
-            currentInput
+    Maybe.andThen errToMessage (statusToMaybeError status)
+        |> Maybe.andThen (\_ -> Just (Input.invalidate currentInput))
+        |> Maybe.withDefault currentInput
 
 
 

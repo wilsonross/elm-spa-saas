@@ -158,7 +158,7 @@ updateWithLoginResponse result model =
                         model.session
                         (Response.stringToAuthJson res)
               }
-            , cmdOnLoginSuccess (Response (Response.stringToAuthJson res)) model
+            , cmdOnAuthSuccess (Response (Response.stringToAuthJson res)) model
             )
 
         Err err ->
@@ -208,8 +208,8 @@ cmdOnRegisterSuccess status model =
             Cmd.none
 
 
-cmdOnLoginSuccess : Status AuthJsonResponse -> Model -> Cmd msg
-cmdOnLoginSuccess status model =
+cmdOnAuthSuccess : Status AuthJsonResponse -> Model -> Cmd msg
+cmdOnAuthSuccess status model =
     case status of
         Response jsonResponse ->
             case jsonResponse of
@@ -375,17 +375,9 @@ errorsFromRegisterStatus status =
 
 responseToRegisterInput : (RegisterErrorData -> Maybe ErrorMessage) -> Input -> Status RegisterJsonResponse -> Input
 responseToRegisterInput errToMessage currentInput status =
-    case statusToMaybeRegisterError status of
-        Just err ->
-            case errToMessage err of
-                Just _ ->
-                    Invalid (Input.stringFromInput currentInput)
-
-                Nothing ->
-                    currentInput
-
-        Nothing ->
-            currentInput
+    Maybe.andThen errToMessage (statusToMaybeRegisterError status)
+        |> Maybe.andThen (\_ -> Just (Input.invalidate currentInput))
+        |> Maybe.withDefault currentInput
 
 
 
