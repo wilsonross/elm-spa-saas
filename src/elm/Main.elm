@@ -92,15 +92,7 @@ update msg model =
             changeRouteTo url model
 
         ( RecieveSession cookie, _ ) ->
-            let
-                updatedSession =
-                    Session.updateSessionWithCookie
-                        cookie
-                        (toSession model)
-            in
-            ( updatedSession |> updateModelWithSession model
-            , updatedSession |> Auth.authRefresh GotAuthRefreshResponse
-            )
+            authRefresh cookie GotAuthRefreshResponse model
 
         ( GotAuthRefreshResponse response, _ ) ->
             updateModelWithSessionCmd
@@ -126,6 +118,26 @@ update msg model =
 
         ( _, _ ) ->
             ( model, Cmd.none )
+
+
+authRefresh : Cookie -> (ResponseResult -> Msg) -> Model -> ( Model, Cmd Msg )
+authRefresh ( key, value, expiry ) toMsg model =
+    let
+        updatedSession =
+            Session.updateSessionWithCookie
+                ( key, value, expiry )
+                (toSession model)
+    in
+    if String.length value == 0 then
+        updateModelWithSessionCmd
+            model
+            (Session.forceGuestSession updatedSession)
+            Cmd.none
+
+    else
+        ( updateModelWithSession model updatedSession
+        , Auth.authRefresh toMsg (toSession model)
+        )
 
 
 updateWith : (subModel -> Model) -> (subMsg -> Msg) -> ( subModel, Cmd subMsg ) -> ( Model, Cmd Msg )
