@@ -232,6 +232,7 @@ errorsFromAuthStatus status =
             case jsonResponse of
                 JsonError err ->
                     createAuthErrorList [] err.data
+                        |> defaultAuthErrorMessage
 
                 JsonSuccess _ ->
                     []
@@ -247,3 +248,15 @@ createAuthErrorList : List ErrorMessage -> AuthErrorData -> List ErrorMessage
 createAuthErrorList list errorData =
     prependMaybeError errorData.identity list
         |> prependMaybeError errorData.password
+
+
+defaultAuthErrorMessage : List ErrorMessage -> List ErrorMessage
+defaultAuthErrorMessage list =
+    if List.isEmpty list then
+        [ { code = "Bad Request"
+          , message = "Could not authenticate."
+          }
+        ]
+
+    else
+        list

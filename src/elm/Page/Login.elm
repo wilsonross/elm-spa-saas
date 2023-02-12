@@ -148,8 +148,16 @@ updateWithError err model =
               in
               { model
                 | response = response
-                , identity = responseToInput (\data -> data.identity) model.identity response
-                , password = responseToInput (\data -> data.password) model.password response
+                , identity =
+                    responseToInput
+                        (\data -> data.identity)
+                        model.identity
+                        response
+                , password =
+                    responseToInput
+                        (\data -> data.password)
+                        model.password
+                        response
               }
             , View.delay 2500 ResetErrorResponse
             )
@@ -183,7 +191,7 @@ responseToInput : (AuthErrorData -> Maybe ErrorMessage) -> Input -> Status AuthJ
 responseToInput errToMessage currentInput status =
     Maybe.andThen errToMessage (statusToMaybeError status)
         |> Maybe.andThen (\_ -> Just (Input.invalidate currentInput))
-        |> Maybe.withDefault currentInput
+        |> Maybe.withDefault (Input.invalidate currentInput)
 
 
 
