@@ -1,11 +1,16 @@
 module Page.Error exposing (Model, Msg, init, update, view)
 
 import Browser.Navigation as Nav
-import Html exposing (Html, button, div, h1, h2, h3, hr, span, text)
+import Html exposing (Html, button, div, h1, h2, h3, span, text)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import Session exposing (Session)
-import View exposing (viewLink)
+import View
+    exposing
+        ( viewDescription
+        , viewLink
+        , viewRule
+        )
 
 
 
@@ -103,20 +108,6 @@ viewHeading code =
         [ viewError
         , viewTitle code
         ]
-
-
-viewRule : Html msg
-viewRule =
-    hr
-        [ class "max-w-[3rem] w-full mx-auto border-grey-3 my-11" ]
-        []
-
-
-viewDescription : String -> Html msg
-viewDescription description =
-    h3
-        [ class "text-center text-xl font-medium mb-[0.625rem]" ]
-        [ text description ]
 
 
 viewAlternative : Html Msg

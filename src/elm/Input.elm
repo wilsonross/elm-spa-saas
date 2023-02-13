@@ -1,6 +1,7 @@
 module Input exposing
     ( Input(..)
     , canSubmit
+    , checkEmail
     , encodeInput
     , inputBorder
     , invalidate
@@ -91,6 +92,11 @@ encodeInput encodingData =
 invalidate : Input -> Input
 invalidate input =
     Invalid (stringFromInput input)
+
+
+checkEmail : String -> Bool
+checkEmail email =
+    String.contains "@" email && String.contains "." email
 
 
 

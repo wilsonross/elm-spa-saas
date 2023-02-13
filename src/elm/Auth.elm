@@ -5,7 +5,7 @@ module Auth exposing
     , requestPasswordReset
     )
 
-import Http
+import Http exposing (Error)
 import Input exposing (Input)
 import Request
 import Response exposing (ResponseResult)
@@ -75,7 +75,7 @@ create toMsg session email password passwordConfirm firstName lastName =
         }
 
 
-requestPasswordReset : (ResponseResult -> msg) -> Session -> Input -> Cmd msg
+requestPasswordReset : (Result Error () -> msg) -> Session -> Input -> Cmd msg
 requestPasswordReset toMsg session email =
     Http.post
         { url =
@@ -88,5 +88,5 @@ requestPasswordReset toMsg session email =
                     [ ( "email", email )
                     ]
                 )
-        , expect = Response.expectStringDetailed toMsg
+        , expect = Http.expectWhatever toMsg
         }

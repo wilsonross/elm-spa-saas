@@ -4,11 +4,13 @@ module View exposing
     , viewAlternative
     , viewAuthLogo
     , viewButtonImage
+    , viewDescription
     , viewErrors
     , viewFooter
     , viewLink
     , viewLinkImage
     , viewLogo
+    , viewRule
     , viewTitle
     )
 
@@ -20,6 +22,8 @@ import Html
         , button
         , div
         , h1
+        , h3
+        , hr
         , img
         , p
         , span
@@ -121,6 +125,20 @@ viewError error =
         [ img [ src "/static/img/info.svg" ] []
         , span [ class "text-white font-medium" ] [ text error.message ]
         ]
+
+
+viewRule : Html msg
+viewRule =
+    hr
+        [ class "max-w-[3rem] w-full mx-auto border-grey-3 my-11" ]
+        []
+
+
+viewDescription : String -> Html msg
+viewDescription description =
+    h3
+        [ class "text-center text-xl font-medium mb-[0.625rem]" ]
+        [ text description ]
 
 
 

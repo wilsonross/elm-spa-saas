@@ -116,7 +116,7 @@ update msg model =
             )
 
         EmailChanged email ->
-            ( { model | email = Input.valueToInput email checkEmail }
+            ( { model | email = Input.valueToInput email Input.checkEmail }
             , Cmd.none
             )
 
@@ -316,11 +316,6 @@ viewRegisterButton =
 checkPassword : String -> Bool
 checkPassword password =
     String.length password >= 8 && String.length password <= 32
-
-
-checkEmail : String -> Bool
-checkEmail email =
-    String.contains "@" email && String.contains "." email
 
 
 stringToRegisterJson : String -> RegisterJsonResponse
