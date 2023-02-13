@@ -2,6 +2,7 @@ module Auth exposing
     ( authRefresh
     , authWithPassword
     , create
+    , requestPasswordReset
     )
 
 import Http
@@ -68,6 +69,23 @@ create toMsg session email password passwordConfirm firstName lastName =
                     , ( "passwordConfirm", passwordConfirm )
                     , ( "firstName", firstName )
                     , ( "lastName", lastName )
+                    ]
+                )
+        , expect = Response.expectStringDetailed toMsg
+        }
+
+
+requestPasswordReset : (ResponseResult -> msg) -> Session -> Input -> Cmd msg
+requestPasswordReset toMsg session email =
+    Http.post
+        { url =
+            Request.joinUrl
+                (Session.apiUrl session)
+                "/api/collections/users/request-password-reset"
+        , body =
+            Http.jsonBody
+                (Input.encodeInput
+                    [ ( "email", email )
                     ]
                 )
         , expect = Response.expectStringDetailed toMsg
