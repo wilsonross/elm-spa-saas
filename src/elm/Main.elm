@@ -259,8 +259,8 @@ changeRouteTo url model =
             ForgotPassword.init session
                 |> updateWith ForgotPassword GotForgotPasswordMsg
 
-        Just Route.Cms ->
-            Cms.init session ""
+        Just (Route.Cms str) ->
+            Cms.init session str
                 |> updateWith Cms GotCmsMsg
 
         Just Route.Account ->
@@ -311,7 +311,7 @@ resetModel model msg =
                 |> addCmdMsg msg
 
         Cms cms ->
-            Cms.init cms.session ""
+            Cms.init cms.session cms.identifier
                 |> updateWith Cms GotCmsMsg
                 |> addCmdMsg msg
 

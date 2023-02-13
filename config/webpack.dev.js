@@ -17,6 +17,7 @@ module.exports = (env) => {
     entry: entryPath,
     output: {
       path: outputPath,
+      publicPath: "/",
       filename: `static/js/${outputFilename}`,
       clean: true,
     },

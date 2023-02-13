@@ -1,11 +1,10 @@
 module Page.Cms exposing (Model, Msg, init, update, view)
 
-import Header exposing (PaginatedResponse, Status(..))
-import Html exposing (Html, div, h1, img, p, span, text)
-import Html.Attributes exposing (class, src)
+import Header exposing (Status(..))
+import Html exposing (Html, div, h1, p, text)
+import Html.Attributes exposing (class)
 import Page exposing (viewComponent)
 import Session exposing (Session)
-import View exposing (Link, viewLink)
 
 
 
@@ -15,13 +14,14 @@ import View exposing (Link, viewLink)
 type alias Model =
     { session : Session
     , header : Header.Model
+    , identifier : String
     , title : String
     , content : String
     }
 
 
 init : Session -> String -> ( Model, Cmd Msg )
-init session _ =
+init session identifier =
     let
         ( header, subMsg ) =
             Header.init session
@@ -30,6 +30,7 @@ init session _ =
       , header = header
       , title = "Cms"
       , content = "Content"
+      , identifier = identifier
       }
     , Cmd.map GotHeaderMsg subMsg
     )

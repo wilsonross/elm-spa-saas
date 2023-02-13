@@ -6,7 +6,7 @@ module.exports = {
       heading: ["'Inter'", "sans-serif"],
     },
     backgroundImage: {
-      navblur: "url('./static/img/navblur.svg')",
+      navblur: "url('/static/img/navblur.svg')",
     },
     extend: {
       colors: {

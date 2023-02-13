@@ -19,6 +19,7 @@ module.exports = (env) => {
       path: outputPath,
       filename: `static/js/${outputFilename}`,
       clean: true,
+      publicPath: "/static/",
     },
     resolve: {
       extensions: [".js", ".elm"],

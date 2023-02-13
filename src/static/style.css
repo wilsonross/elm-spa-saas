@@ -9,42 +9,42 @@
 
 @font-face {
   font-family: "Inter";
-  src: url(./static/fonts/Inter-Regular.ttf);
+  src: url(/static/fonts/Inter-Regular.ttf);
   font-style: normal;
   font-weight: 400;
 }
 
 @font-face {
   font-family: "Inter";
-  src: url("./static/fonts/Inter-Medium.ttf");
+  src: url("/static/fonts/Inter-Medium.ttf");
   font-style: normal;
   font-weight: 500;
 }
 
 @font-face {
   font-family: "Inter";
-  src: url("./static/fonts/Inter-SemiBold.ttf");
+  src: url("/static/fonts/Inter-SemiBold.ttf");
   font-style: normal;
   font-weight: 600;
 }
 
 @font-face {
   font-family: "Inter";
-  src: url("./static/fonts/Inter-Bold.ttf");
+  src: url("/static/fonts/Inter-Bold.ttf");
   font-style: normal;
   font-weight: 700;
 }
 
 @font-face {
   font-family: "Inter";
-  src: url("./static/fonts/Inter-Black.ttf");
+  src: url("/static/fonts/Inter-Black.ttf");
   font-style: normal;
   font-weight: 900;
 }
 
 body {
   height: 100%;
-  background-image: url("./static/img/underlay.svg");
+  background-image: url("/static/img/underlay.svg");
   background-repeat: no-repeat;
   background-position: right bottom;
 }
