@@ -266,9 +266,6 @@ changeRouteTo url model =
         Just Route.Account ->
             underConstruction session
 
-        Just Route.About ->
-            underConstruction session
-
         Just Route.HowItWorks ->
             underConstruction session
 
@@ -311,7 +308,7 @@ resetModel model msg =
                 |> addCmdMsg msg
 
         Cms cms ->
-            Cms.init cms.session cms.identifier
+            Cms.init cms.session cms.id
                 |> updateWith Cms GotCmsMsg
                 |> addCmdMsg msg
 
