@@ -7,6 +7,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Page
 import Page.Error as Error
+import Page.ForgotPassword as ForgotPassword
 import Page.Home as Home
 import Page.Login as Login
 import Page.Register as Register
@@ -46,6 +47,7 @@ type Model
     | Login Login.Model
     | Register Register.Model
     | Error Error.Model
+    | ForgotPassword ForgotPassword.Model
 
 
 init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
@@ -70,6 +72,7 @@ type Msg
     | GotLoginMsg Login.Msg
     | GotRegisterMsg Register.Msg
     | GotErrorMsg Error.Msg
+    | GotForgotPasswordMsg ForgotPassword.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -112,6 +115,10 @@ update msg model =
             Error.update subMsg error
                 |> updateWith Error GotErrorMsg
 
+        ( GotForgotPasswordMsg subMsg, ForgotPassword forgotPassword ) ->
+            ForgotPassword.update subMsg forgotPassword
+                |> updateWith ForgotPassword GotForgotPasswordMsg
+
         ( _, _ ) ->
             ( model, Cmd.none )
 
@@ -137,6 +144,9 @@ updateModelWithSession model session =
 
         Error error ->
             Error { error | session = session }
+
+        ForgotPassword forgotPassword ->
+            ForgotPassword { forgotPassword | session = session }
 
 
 updateSessionWithResult : ResponseResult -> Session -> Session
@@ -178,6 +188,9 @@ view model =
         Error error ->
             Page.viewPage GotErrorMsg (Error.view error)
 
+        ForgotPassword forgotPassword ->
+            Page.viewPage GotForgotPasswordMsg (ForgotPassword.view forgotPassword)
+
 
 
 -- HELPERS
@@ -197,6 +210,9 @@ toSession model =
 
         Error error ->
             error.session
+
+        ForgotPassword forgotPassword ->
+            forgotPassword.session
 
 
 changeRouteTo : Url.Url -> Model -> ( Model, Cmd Msg )
@@ -223,6 +239,10 @@ changeRouteTo url model =
             Register.init session
                 |> updateWith Register GotRegisterMsg
 
+        Just Route.ForgotPassword ->
+            ForgotPassword.init session
+                |> updateWith ForgotPassword GotForgotPasswordMsg
+
         Just Route.Account ->
             underConstruction session
 
@@ -239,9 +259,6 @@ changeRouteTo url model =
             underConstruction session
 
         Just Route.Pricing ->
-            underConstruction session
-
-        Just Route.ForgotPassword ->
             underConstruction session
 
 
@@ -266,6 +283,11 @@ resetModel model msg =
         Error error ->
             Error.init error.session 404 "Page not found"
                 |> updateWith Error GotErrorMsg
+                |> addCmdMsg msg
+
+        ForgotPassword forgotPassword ->
+            ForgotPassword.init forgotPassword.session
+                |> updateWith ForgotPassword GotForgotPasswordMsg
                 |> addCmdMsg msg
 
 
