@@ -21,6 +21,7 @@ type Route
     | Contact
     | Pricing
     | ForgotPassword
+    | Cms
 
 
 parser : Parser (Route -> a) a
@@ -36,6 +37,7 @@ parser =
         , Parser.map Contact (s "contact")
         , Parser.map Pricing (s "pricing")
         , Parser.map ForgotPassword (s "forgot-password")
+        , Parser.map Cms (s "cms")
         ]
 
 

@@ -6,6 +6,7 @@ import Browser.Navigation as Nav
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Page
+import Page.Cms as Cms
 import Page.Error as Error
 import Page.ForgotPassword as ForgotPassword
 import Page.Home as Home
@@ -48,6 +49,7 @@ type Model
     | Register Register.Model
     | Error Error.Model
     | ForgotPassword ForgotPassword.Model
+    | Cms Cms.Model
 
 
 init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
@@ -73,6 +75,7 @@ type Msg
     | GotRegisterMsg Register.Msg
     | GotErrorMsg Error.Msg
     | GotForgotPasswordMsg ForgotPassword.Msg
+    | GotCmsMsg Cms.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -119,6 +122,10 @@ update msg model =
             ForgotPassword.update subMsg forgotPassword
                 |> updateWith ForgotPassword GotForgotPasswordMsg
 
+        ( GotCmsMsg subMsg, Cms forgotPassword ) ->
+            Cms.update subMsg forgotPassword
+                |> updateWith Cms GotCmsMsg
+
         ( _, _ ) ->
             ( model, Cmd.none )
 
@@ -147,6 +154,9 @@ updateModelWithSession model session =
 
         ForgotPassword forgotPassword ->
             ForgotPassword { forgotPassword | session = session }
+
+        Cms cms ->
+            Cms { cms | session = session }
 
 
 updateSessionWithResult : ResponseResult -> Session -> Session
@@ -191,6 +201,9 @@ view model =
         ForgotPassword forgotPassword ->
             Page.viewPage GotForgotPasswordMsg (ForgotPassword.view forgotPassword)
 
+        Cms cms ->
+            Page.viewPage GotCmsMsg (Cms.view cms)
+
 
 
 -- HELPERS
@@ -213,6 +226,9 @@ toSession model =
 
         ForgotPassword forgotPassword ->
             forgotPassword.session
+
+        Cms cms ->
+            cms.session
 
 
 changeRouteTo : Url.Url -> Model -> ( Model, Cmd Msg )
@@ -242,6 +258,10 @@ changeRouteTo url model =
         Just Route.ForgotPassword ->
             ForgotPassword.init session
                 |> updateWith ForgotPassword GotForgotPasswordMsg
+
+        Just Route.Cms ->
+            Cms.init session ""
+                |> updateWith Cms GotCmsMsg
 
         Just Route.Account ->
             underConstruction session
@@ -288,6 +308,11 @@ resetModel model msg =
         ForgotPassword forgotPassword ->
             ForgotPassword.init forgotPassword.session
                 |> updateWith ForgotPassword GotForgotPasswordMsg
+                |> addCmdMsg msg
+
+        Cms cms ->
+            Cms.init cms.session ""
+                |> updateWith Cms GotCmsMsg
                 |> addCmdMsg msg
 
 

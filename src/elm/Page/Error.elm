@@ -1,7 +1,7 @@
 module Page.Error exposing (Model, Msg, init, update, view)
 
 import Browser.Navigation as Nav
-import Html exposing (Html, button, div, h1, h2, h3, span, text)
+import Html exposing (Html, button, div, h1, h2, span, text)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import Session exposing (Session)
