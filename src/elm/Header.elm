@@ -1,7 +1,7 @@
 module Header exposing
-    ( Model
+    ( CollectionResponse
+    , Model
     , Msg(..)
-    , PaginatedResponse
     , Status(..)
     , init
     , paginatedResponseToLinks
@@ -17,9 +17,10 @@ import Html.Attributes exposing (class, placeholder, src, value)
 import Html.Events exposing (onClick, onInput)
 import Http
 import Input exposing (Input(..))
-import Json.Decode as Decode exposing (Decoder, at, int, list, string)
-import Json.Decode.Pipeline exposing (custom, optional, required)
+import Json.Decode as Decode exposing (Decoder, int, string)
+import Json.Decode.Pipeline exposing (optional, required)
 import Request
+import Response exposing (PaginatedResponse)
 import Session exposing (Session(..))
 import View
     exposing
@@ -48,7 +49,7 @@ type alias Model =
 type Status
     = Failure
     | Loading
-    | Success PaginatedResponse
+    | Success (PaginatedResponse (List CollectionResponse))
 
 
 init : Session -> ( Model, Cmd Msg )
@@ -68,7 +69,7 @@ init session =
         , expect =
             Http.expectJson
                 GotPaginatedResponse
-                decodePaginatedResponse
+                (Response.decodePaginatedResponse decodeCollectionResponse)
         }
     )
 
@@ -78,7 +79,7 @@ init session =
 
 
 type Msg
-    = GotPaginatedResponse (Result Http.Error PaginatedResponse)
+    = GotPaginatedResponse (Result Http.Error (PaginatedResponse (List CollectionResponse)))
     | NavToggle
     | MobileSearchToggle
     | SearchChanged String
@@ -131,7 +132,7 @@ update msg model =
 -- HELPERS
 
 
-paginatedResponseToLinks : PaginatedResponse -> List Link
+paginatedResponseToLinks : PaginatedResponse (List CollectionResponse) -> List Link
 paginatedResponseToLinks response =
     List.map
         (\record ->
@@ -390,16 +391,6 @@ viewActiveNavLink path link =
 -- JSON
 
 
-type alias PaginatedResponse =
-    { page : Int
-    , perPage : Int
-    , totalItems : Int
-    , totalPages : Int
-    , items :
-        List CollectionResponse
-    }
-
-
 type alias CollectionResponse =
     { collectionId : String
     , collectionName : String
@@ -410,16 +401,6 @@ type alias CollectionResponse =
     , title : String
     , updated : String
     }
-
-
-decodePaginatedResponse : Decoder PaginatedResponse
-decodePaginatedResponse =
-    Decode.succeed PaginatedResponse
-        |> required "page" int
-        |> required "perPage" int
-        |> required "totalItems" int
-        |> required "totalPages" int
-        |> custom (at [ "items" ] (list decodeCollectionResponse))
 
 
 decodeCollectionResponse : Decoder CollectionResponse

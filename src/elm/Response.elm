@@ -6,12 +6,14 @@ module Response exposing
     , ErrorMessage
     , ErrorResponse
     , JsonResponse(..)
+    , PaginatedResponse
     , ResponseResult
     , UserResponse
     , decodeAuthErrorData
     , decodeAuthResponse
     , decodeErrorMessage
     , decodeErrorResponse
+    , decodePaginatedResponse
     , decodeUserResponse
     , errorsFromAuthStatus
     , expectStringDetailed
@@ -22,8 +24,17 @@ module Response exposing
     )
 
 import Http exposing (Expect, Metadata, Response)
-import Json.Decode as Decode exposing (Decoder, Error, bool, int, string)
-import Json.Decode.Pipeline exposing (optional, required)
+import Json.Decode as Decode
+    exposing
+        ( Decoder
+        , Error
+        , at
+        , bool
+        , int
+        , list
+        , string
+        )
+import Json.Decode.Pipeline exposing (custom, optional, required)
 import Request exposing (Status(..))
 
 
@@ -260,3 +271,22 @@ defaultAuthErrorMessage list =
 
     else
         list
+
+
+type alias PaginatedResponse items =
+    { page : Int
+    , perPage : Int
+    , totalItems : Int
+    , totalPages : Int
+    , items : items
+    }
+
+
+decodePaginatedResponse : Decoder item -> Decoder (PaginatedResponse (List item))
+decodePaginatedResponse itemDecoder =
+    Decode.succeed PaginatedResponse
+        |> required "page" int
+        |> required "perPage" int
+        |> required "totalItems" int
+        |> required "totalPages" int
+        |> custom (at [ "items" ] (list itemDecoder))

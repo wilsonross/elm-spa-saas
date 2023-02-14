@@ -1,9 +1,10 @@
 module Page.Home exposing (Model, Msg, init, update, view)
 
-import Header exposing (PaginatedResponse, Status(..))
+import Header exposing (CollectionResponse, Status(..))
 import Html exposing (Html, div, h1, img, p, span, text)
 import Html.Attributes exposing (class, src)
 import Page exposing (viewComponent)
+import Response exposing (PaginatedResponse)
 import Session exposing (Session)
 import View exposing (Link, viewLink)
 
@@ -203,7 +204,7 @@ removeIndexLink links =
     List.filter (\link -> link.url /= "/") links
 
 
-formatLinks : PaginatedResponse -> List Link
+formatLinks : PaginatedResponse (List CollectionResponse) -> List Link
 formatLinks paginatedResponse =
     Header.paginatedResponseToLinks paginatedResponse
         |> removeIndexLink
