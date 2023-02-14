@@ -80,7 +80,10 @@ viewButtonImage attr click image =
                 , preventDefault = True
                 }
     in
-    button (custom "click" options :: (class "block shrink-0" :: attr))
+    button
+        (custom "click" options
+            :: (class "block shrink-0 focus:outline-none" :: attr)
+        )
         [ img
             [ src image
             , class "block h-full w-full"

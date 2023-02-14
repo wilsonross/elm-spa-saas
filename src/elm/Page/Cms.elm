@@ -1,5 +1,6 @@
 module Page.Cms exposing (Model, Msg, init, update, view)
 
+import Browser.Navigation as Nav
 import Header exposing (Status)
 import Html exposing (Html, div, h1, text)
 import Html.Attributes exposing (class)
@@ -36,8 +37,8 @@ init session id =
     ( { session = session
       , header = header
       , response = Loading
-      , title = "Cms"
-      , content = "Content"
+      , title = ""
+      , content = ""
       , id = id
       }
     , Cmd.batch
@@ -81,7 +82,7 @@ update msg model =
 
                 Err _ ->
                     ( { model | response = Failure }
-                    , Cmd.none
+                    , Nav.pushUrl (Session.navKey model.session) "/404"
                     )
 
 
