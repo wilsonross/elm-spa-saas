@@ -115,9 +115,8 @@ view model =
             [ viewHeader model
             , div
                 [ class <|
-                    "flex px-12 lg:px-5 max-w-[76.5rem] w-full lg:items-center"
-                        ++ " lg:h-[calc(100vh_-_var(--header-height))] mx-auto"
-                        ++ " flex-col lg:flex-row pt-5 lg:pt-0"
+                    "px-6 sm:px-12 lg:px-5 w-full mx-auto max-w-[76.5rem] pt-5"
+                        ++ " lg:pt-0 mt-6 md:mt-28 mb-20"
                 ]
                 [ viewCms model
                 ]
@@ -136,7 +135,7 @@ viewCms model =
     div
         [ class <|
             "max-w-[39.5rem] w-full mx-auto bg-white rounded-md pt-[3.75rem]"
-                ++ " pb-[4.25rem] px-20 shadow-page relative"
+                ++ " pb-[4.25rem] px-6 md:px-20 shadow-page relative"
         ]
         [ viewTitle model.title
         , viewContent model.content
