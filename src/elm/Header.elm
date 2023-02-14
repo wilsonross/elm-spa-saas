@@ -187,7 +187,7 @@ viewMobileSearch model =
                     ++ searchClass
             ]
             [ input
-                [ placeholder "Find design"
+                [ placeholder "Search docs"
                 , onInput SearchChanged
                 , value (Input.stringFromInput model.search)
                 , class <|
@@ -211,7 +211,7 @@ viewDesktopSearch search =
                 ++ " items-center"
         ]
         [ input
-            [ placeholder "Find design"
+            [ placeholder "Search docs"
             , class <|
                 "bg-grey-0 focus-visible:outline-none w-full pt-[2px]"
                     ++ " placeholder:grey-2"

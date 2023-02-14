@@ -1,11 +1,11 @@
 module Page.Search exposing (Model, Msg, init, update, view)
 
 import Header exposing (Status)
-import Html exposing (Html, a, div, h1, img, text)
-import Html.Attributes exposing (class, src)
+import Html exposing (Html, a, div, h1, h3, img, p, text)
+import Html.Attributes exposing (class, href, src)
 import Http
 import Json.Decode as Decode exposing (Decoder, string)
-import Json.Decode.Pipeline exposing (required)
+import Json.Decode.Pipeline exposing (optional, required)
 import Page exposing (viewComponent)
 import Request exposing (Status(..))
 import Response exposing (PaginatedResponse)
@@ -132,32 +132,49 @@ viewSearchResults model =
     div
         []
         [ viewTitle model.query
-        , viewSearchItems
+        , viewSearchItems model.response
         ]
 
 
 viewTitle : String -> Html msg
 viewTitle query =
     h1
-        [ class "text-xl text-center font-medium" ]
+        [ class "text-2xl text-center font-medium mb-9" ]
         [ capitalize query
             |> addQuotes
             |> text
         ]
 
 
-viewSearchItems : Html msg
-viewSearchItems =
-    div
-        []
-        []
+viewSearchItems : Status SearchResponse -> Html msg
+viewSearchItems status =
+    case status of
+        Response response ->
+            div [ class "max-w-md w-full mx-auto" ]
+                (List.map viewSearchItem response.items)
+
+        Failure ->
+            div
+                []
+                []
+
+        _ ->
+            div
+                []
+                []
 
 
-viewSearchItem : String -> String -> String -> String -> Html msg
-viewSearchItem href src title tagline =
+viewSearchItem : CollectionResponse -> Html msg
+viewSearchItem collectionResponse =
     a
-        [ class "p-[1.125rem] block w-full flex rounded-md" ]
-        [ viewSearchItemImage src ]
+        [ href ("/cms/" ++ collectionResponse.id)
+        , class <|
+            "p-[1.125rem] block w-full flex rounded-md bg-white rounded-md"
+                ++ " mb-[1.125rem] shadow-page"
+        ]
+        [ viewSearchItemImage collectionResponse.image
+        , viewSearchItemBody collectionResponse
+        ]
 
 
 viewSearchItemImage : String -> Html msg
@@ -171,6 +188,34 @@ viewSearchItemImage url =
         img
             [ src url, class "w-16 h-16 shrink-0" ]
             []
+
+
+viewSearchItemBody : CollectionResponse -> Html msg
+viewSearchItemBody collectionResponse =
+    div
+        [ class "pl-[1.125rem] flex flex-col justify-center gap-[6px]" ]
+        [ viewSearchItemTitle collectionResponse.title
+        , viewSearchItemTagline collectionResponse.tagline
+        ]
+
+
+viewSearchItemTitle : String -> Html msg
+viewSearchItemTitle title =
+    h3
+        [ class <|
+            "text-xl font-medium relative after:content-[''] after:block"
+                ++ " after:absolute after:w-[0.875rem] after:h-[2px]"
+                ++ " after:bg-turq after:rounded-full after:left-px"
+                ++ " after:bottom-px"
+        ]
+        [ text title ]
+
+
+viewSearchItemTagline : String -> Html msg
+viewSearchItemTagline tagline =
+    p
+        [ class "text-sm leading-[1.625rem]" ]
+        [ text tagline ]
 
 
 
@@ -191,13 +236,11 @@ capitalize str =
 
 searchBuilder : String -> String
 searchBuilder query =
-    "/api/collections/cms/records?filter=(title~%'"
+    "/api/collections/cms/records?filter=(title~'"
         ++ query
-        ++ "%'||tagline~%'"
+        ++ "'||tagline~'"
         ++ query
-        ++ "%'||description~%'"
-        ++ query
-        ++ "%')"
+        ++ "')"
 
 
 
@@ -225,7 +268,7 @@ decodeCollectionResponse =
         |> required "content" string
         |> required "created" string
         |> required "id" string
-        |> required "image" string
+        |> optional "image" string ""
         |> required "tagline" string
         |> required "title" string
         |> required "updated" string
