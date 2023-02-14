@@ -266,12 +266,6 @@ changeRouteTo url model =
         Just Route.Account ->
             underConstruction session
 
-        Just Route.HowItWorks ->
-            underConstruction session
-
-        Just Route.Testimonials ->
-            underConstruction session
-
         Just Route.Contact ->
             underConstruction session
 

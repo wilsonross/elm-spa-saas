@@ -15,8 +15,6 @@ type Route
     | Login
     | Register
     | Account
-    | HowItWorks
-    | Testimonials
     | Contact
     | Pricing
     | ForgotPassword
@@ -30,8 +28,6 @@ parser =
         , Parser.map Login (s "login")
         , Parser.map Register (s "register")
         , Parser.map Account (s "account")
-        , Parser.map HowItWorks (s "how-it-works")
-        , Parser.map Testimonials (s "testimonials")
         , Parser.map Contact (s "contact")
         , Parser.map Pricing (s "pricing")
         , Parser.map ForgotPassword (s "forgot-password")
