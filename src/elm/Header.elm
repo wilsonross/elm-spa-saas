@@ -10,16 +10,25 @@ module Header exposing
     , view
     )
 
+import Browser.Navigation as Nav
 import Compare exposing (Comparator)
 import Html exposing (Html, button, div, form, img, input, li, text, ul)
-import Html.Attributes exposing (class, placeholder, src)
-import Html.Events exposing (onClick)
+import Html.Attributes exposing (class, placeholder, src, value)
+import Html.Events exposing (onClick, onInput)
 import Http
+import Input exposing (Input(..))
 import Json.Decode as Decode exposing (Decoder, at, int, list, string)
 import Json.Decode.Pipeline exposing (custom, optional, required)
 import Request
 import Session exposing (Session(..))
-import View exposing (Link, viewButtonImage, viewLink, viewLinkImage, viewLogo)
+import View
+    exposing
+        ( Link
+        , viewButtonImage
+        , viewLink
+        , viewLinkImage
+        , viewLogo
+        )
 
 
 
@@ -32,6 +41,7 @@ type alias Model =
     , navOpen : Bool
     , mobileSearchOpen : Bool
     , path : String
+    , search : Input
     }
 
 
@@ -48,6 +58,7 @@ init session =
       , navOpen = False
       , mobileSearchOpen = False
       , path = Session.pathFromSession session
+      , search = Empty
       }
     , Http.get
         { url =
@@ -70,6 +81,8 @@ type Msg
     = GotPaginatedResponse (Result Http.Error PaginatedResponse)
     | NavToggle
     | MobileSearchToggle
+    | SearchChanged String
+    | Search
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -95,6 +108,22 @@ update msg model =
         MobileSearchToggle ->
             ( { model | mobileSearchOpen = not model.mobileSearchOpen }
             , Cmd.none
+            )
+
+        SearchChanged input ->
+            ( { model
+                | search =
+                    (\str -> String.length str >= 1)
+                        |> Input.valueToInput input
+              }
+            , Cmd.none
+            )
+
+        Search ->
+            ( model
+            , Nav.pushUrl
+                (Session.navKey model.session)
+                ("/search/?q=" ++ Input.stringFromInput model.search)
             )
 
 
@@ -126,7 +155,7 @@ view model =
                 ++ " w-full gap-6 sm:gap-9 max-w-[76.5rem]"
         ]
         [ viewLogo []
-        , viewDesktopSearch
+        , viewDesktopSearch model.search
         , viewMobileSearch model
         , viewAuthLinks model.session
         , viewNavButton
@@ -158,11 +187,14 @@ viewMobileSearch model =
             ]
             [ input
                 [ placeholder "Find design"
+                , onInput SearchChanged
+                , value (Input.stringFromInput model.search)
                 , class <|
                     "focus-visible:outline-none w-full pt-[2px]"
                         ++ " placeholder:grey-2"
                 ]
                 []
+            , button [ class "hidden", View.preventDefault Search ] []
             , viewButtonImage [ class "h-5 w-5" ]
                 MobileSearchToggle
                 "/static/img/close.svg"
@@ -170,8 +202,8 @@ viewMobileSearch model =
         ]
 
 
-viewDesktopSearch : Html Msg
-viewDesktopSearch =
+viewDesktopSearch : Input -> Html Msg
+viewDesktopSearch search =
     form
         [ class <|
             "bg-grey-0 rounded-md px-[11px] w-[16.625rem] h-10 hidden md:flex"
@@ -182,11 +214,13 @@ viewDesktopSearch =
             , class <|
                 "bg-grey-0 focus-visible:outline-none w-full pt-[2px]"
                     ++ " placeholder:grey-2"
+            , onInput SearchChanged
+            , value (Input.stringFromInput search)
             ]
             []
-        , button [ class "h-5 w-5 shrink-0" ]
-            [ img [ src "/static/img/search.svg" ] []
-            ]
+        , viewButtonImage [ class "h-5 w-5 shrink-0" ]
+            Search
+            "/static/img/search.svg"
         ]
 
 

@@ -1,6 +1,7 @@
 module View exposing
     ( Link
     , delay
+    , preventDefault
     , viewAlternative
     , viewAuthLogo
     , viewButtonImage
@@ -72,17 +73,11 @@ viewLinkImage attr url image =
 
 viewButtonImage : List (Attribute msg) -> msg -> String -> Html msg
 viewButtonImage attr click image =
-    let
-        options =
-            Decode.succeed
-                { message = click
-                , stopPropagation = True
-                , preventDefault = True
-                }
-    in
     button
-        (custom "click" options
-            :: (class "block shrink-0 focus:outline-none" :: attr)
+        (attr
+            ++ [ preventDefault click
+               , class "block shrink-0 focus:outline-none"
+               ]
         )
         [ img
             [ src image
@@ -178,3 +173,14 @@ delay time msg =
     Process.sleep time
         |> Task.andThen (always <| Task.succeed msg)
         |> Task.perform identity
+
+
+preventDefault : msg -> Attribute msg
+preventDefault msg =
+    custom "click"
+        (Decode.succeed
+            { message = msg
+            , stopPropagation = True
+            , preventDefault = True
+            }
+        )
