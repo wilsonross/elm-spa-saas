@@ -3,7 +3,8 @@ module Route exposing (Route(..), fromUrl, protected)
 import Browser.Navigation as Nav
 import Session exposing (Session(..))
 import Url exposing (Url)
-import Url.Parser as Parser exposing ((</>), Parser, oneOf, s, string)
+import Url.Parser as Parser exposing ((</>), (<?>), Parser, oneOf, s, string)
+import Url.Parser.Query as Query
 
 
 
@@ -19,6 +20,7 @@ type Route
     | Pricing
     | ForgotPassword
     | Cms String
+    | Search (Maybe String)
 
 
 parser : Parser (Route -> a) a
@@ -32,6 +34,7 @@ parser =
         , Parser.map Pricing (s "pricing")
         , Parser.map ForgotPassword (s "forgot-password")
         , Parser.map Cms (s "cms" </> string)
+        , Parser.map Search (s "search" <?> Query.string "q")
         ]
 
 

@@ -12,6 +12,7 @@ import Page.ForgotPassword as ForgotPassword
 import Page.Home as Home
 import Page.Login as Login
 import Page.Register as Register
+import Page.Search as Search
 import Port
 import Response
     exposing
@@ -50,6 +51,7 @@ type Model
     | Error Error.Model
     | ForgotPassword ForgotPassword.Model
     | Cms Cms.Model
+    | Search Search.Model
 
 
 init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
@@ -76,6 +78,7 @@ type Msg
     | GotErrorMsg Error.Msg
     | GotForgotPasswordMsg ForgotPassword.Msg
     | GotCmsMsg Cms.Msg
+    | GotSearchMsg Search.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -126,6 +129,10 @@ update msg model =
             Cms.update subMsg forgotPassword
                 |> updateWith Cms GotCmsMsg
 
+        ( GotSearchMsg subMsg, Search search ) ->
+            Search.update subMsg search
+                |> updateWith Search GotSearchMsg
+
         ( _, _ ) ->
             ( model, Cmd.none )
 
@@ -157,6 +164,9 @@ updateModelWithSession model session =
 
         Cms cms ->
             Cms { cms | session = session }
+
+        Search search ->
+            Search { search | session = session }
 
 
 updateSessionWithResult : ResponseResult -> Session -> Session
@@ -204,6 +214,9 @@ view model =
         Cms cms ->
             Page.viewPage GotCmsMsg (Cms.view cms)
 
+        Search search ->
+            Page.viewPage GotSearchMsg (Search.view search)
+
 
 
 -- HELPERS
@@ -229,6 +242,9 @@ toSession model =
 
         Cms cms ->
             cms.session
+
+        Search search ->
+            search.session
 
 
 changeRouteTo : Url.Url -> Model -> ( Model, Cmd Msg )
@@ -262,6 +278,10 @@ changeRouteTo url model =
         Just (Route.Cms str) ->
             Cms.init session str
                 |> updateWith Cms GotCmsMsg
+
+        Just (Route.Search maybeStr) ->
+            Search.init session (Maybe.withDefault "" maybeStr)
+                |> updateWith Search GotSearchMsg
 
         Just Route.Account ->
             underConstruction session
@@ -304,6 +324,11 @@ resetModel model msg =
         Cms cms ->
             Cms.init cms.session cms.id
                 |> updateWith Cms GotCmsMsg
+                |> addCmdMsg msg
+
+        Search search ->
+            Search.init search.session search.query
+                |> updateWith Search GotSearchMsg
                 |> addCmdMsg msg
 
 
