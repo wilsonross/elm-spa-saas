@@ -112,8 +112,8 @@ view model =
             [ viewHeader model
             , div
                 [ class <|
-                    "px-6 sm:px-12 lg:px-5 w-full mx-auto max-w-[76.5rem] pt-5"
-                        ++ " lg:pt-0 mt-6 md:mt-28 mb-20"
+                    "px-12 lg:px-0 w-full mx-auto max-w-[76.5rem] mb-20 mt-6"
+                        ++ " md:mt-28"
                 ]
                 [ viewSearchResults model
                 ]
@@ -150,13 +150,15 @@ viewSearchItems : Status SearchResponse -> Html msg
 viewSearchItems status =
     case status of
         Response response ->
-            div [ class "max-w-md w-full mx-auto" ]
-                (List.map viewSearchItem response.items)
+            if List.isEmpty response.items then
+                viewNoResults
+
+            else
+                div [ class "max-w-md w-full mx-auto" ]
+                    (List.map viewSearchItem response.items)
 
         Failure ->
-            div
-                []
-                []
+            viewNoResults
 
         _ ->
             div
@@ -170,7 +172,7 @@ viewSearchItem collectionResponse =
         [ href ("/cms/" ++ collectionResponse.id)
         , class <|
             "p-[1.125rem] block w-full flex rounded-md bg-white rounded-md"
-                ++ " mb-[1.125rem] shadow-page"
+                ++ " mb-[1.125rem] shadow-page items-center last:mb-0"
         ]
         [ viewSearchItemImage collectionResponse.image
         , viewSearchItemBody collectionResponse
@@ -181,19 +183,19 @@ viewSearchItemImage : String -> Html msg
 viewSearchItemImage url =
     if url == "" then
         div
-            [ class "w-16 h-16 shrink-0 bg-grey-1" ]
+            [ class "w-16 h-16 shrink-0 bg-grey-1 hidden sm:block" ]
             []
 
     else
         img
-            [ src url, class "w-16 h-16 shrink-0" ]
+            [ src url, class "w-16 h-16 shrink-0 hidden sm:block" ]
             []
 
 
 viewSearchItemBody : CollectionResponse -> Html msg
 viewSearchItemBody collectionResponse =
     div
-        [ class "pl-[1.125rem] flex flex-col justify-center gap-[6px]" ]
+        [ class "p-0 sm:pl-[1.125rem] flex flex-col justify-center gap-[6px]" ]
         [ viewSearchItemTitle collectionResponse.title
         , viewSearchItemTagline collectionResponse.tagline
         ]
@@ -216,6 +218,12 @@ viewSearchItemTagline tagline =
     p
         [ class "text-sm leading-[1.625rem]" ]
         [ text tagline ]
+
+
+viewNoResults : Html msg
+viewNoResults =
+    div [ class "justify-center text-grey-2 text-center" ]
+        [ text "No results found" ]
 
 
 

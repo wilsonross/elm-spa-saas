@@ -116,8 +116,8 @@ view model =
             [ viewHeader model
             , div
                 [ class <|
-                    "px-6 sm:px-12 lg:px-5 w-full mx-auto max-w-[76.5rem] pt-5"
-                        ++ " lg:pt-0 mt-6 md:mt-28 mb-20"
+                    "px-6 sm:px-12 lg:px-5 w-full mx-auto max-w-[76.5rem] mt-6"
+                        ++ " md:mt-28 mb-20"
                 ]
                 [ viewCms model
                 ]
