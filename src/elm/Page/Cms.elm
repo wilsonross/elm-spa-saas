@@ -165,7 +165,7 @@ viewContent content =
     case contentHtml of
         Ok html ->
             div
-                [ class "text-sm leading-[1.625rem]"
+                [ class "text-sm leading-[1.625rem] links-turq"
                 ]
                 (HtmlParserUtil.toVirtualDom
                     html

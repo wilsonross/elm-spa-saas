@@ -64,6 +64,10 @@ body {
     animation-play-state: paused;
   }
 
+  .links-turq a {
+	 @apply text-turq;
+  }
+
   input[type="checkbox"]:checked ~ img.checkbox-img:nth-of-type(1) {
     @apply opacity-0;
   }
