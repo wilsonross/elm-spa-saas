@@ -277,7 +277,11 @@ viewForm model =
         , viewAdditional
         , viewRegisterButton
         , viewAlternative "Already have an account?" "Sign in" "now" "/login"
-        , viewPreloader (isLoading model.registerResponse model.loginResponse)
+        , viewPreloader
+            (Request.isLoading
+                model.registerResponse
+                model.loginResponse
+            )
         ]
 
 
@@ -324,15 +328,6 @@ stringToRegisterJson str =
         decodeRegisterErrorData
         Response.decodeUserResponse
         str
-
-
-isLoading : Status a -> Status b -> Status c
-isLoading registerStatus loginStatus =
-    if registerStatus == Loading || loginStatus == Loading then
-        Loading
-
-    else
-        None
 
 
 

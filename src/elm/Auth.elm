@@ -2,6 +2,7 @@ module Auth exposing
     ( authRefresh
     , authWithPassword
     , create
+    , delete
     , requestPasswordReset
     )
 
@@ -40,8 +41,7 @@ authWithPassword : (ResponseResult -> msg) -> Session -> Input -> Input -> Cmd m
 authWithPassword toMsg session identity password =
     Http.post
         { url =
-            Request.joinUrl
-                (Session.apiUrl session)
+            Request.joinUrl (Session.apiUrl session)
                 "/api/collections/users/auth-with-password"
         , body =
             Http.jsonBody
@@ -89,4 +89,25 @@ requestPasswordReset toMsg session email =
                     ]
                 )
         , expect = Http.expectWhatever toMsg
+        }
+
+
+delete : (Result Error () -> msg) -> Session -> Cmd msg
+delete toMsg session =
+    Http.request
+        { method = "DELETE"
+        , headers =
+            [ Http.header
+                "Authorization"
+                (Session.sessionToCookieToken session)
+            ]
+        , url =
+            Request.joinUrl
+                (Session.apiUrl session)
+                "/api/collections/users/records/"
+                ++ Session.userId session
+        , body = Http.emptyBody
+        , expect = Http.expectWhatever toMsg
+        , timeout = Nothing
+        , tracker = Nothing
         }

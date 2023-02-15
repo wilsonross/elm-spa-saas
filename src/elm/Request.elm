@@ -1,4 +1,4 @@
-module Request exposing (Status(..), joinUrl, viewPreloader)
+module Request exposing (Status(..), isLoading, joinUrl, viewPreloader)
 
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (class)
@@ -34,6 +34,15 @@ joinUrl url path =
 
     else
         url ++ path
+
+
+isLoading : Status a -> Status b -> Status c
+isLoading a b =
+    if a == Loading || b == Loading then
+        Loading
+
+    else
+        None
 
 
 

@@ -1,5 +1,6 @@
 module Page.Account exposing (Model, Msg, init, update, view)
 
+import Auth
 import Browser.Navigation as Nav
 import Html exposing (Html, div, form, text)
 import Html.Attributes exposing (class)
@@ -33,6 +34,7 @@ import View
 type alias Model =
     { session : Session
     , messageResponse : Status MessageResponse
+    , deleteResponse : Status ()
     }
 
 
@@ -40,6 +42,7 @@ init : Session -> ( Model, Cmd Msg )
 init session =
     ( { session = session
       , messageResponse = Loading
+      , deleteResponse = None
       }
     , Cmd.batch
         [ Route.protected session False
@@ -52,7 +55,7 @@ init session =
             , expect =
                 Http.expectJson
                     GotMessageResponse
-                    decodeResponse
+                    decodeMessageResponse
             }
         ]
     )
@@ -64,6 +67,7 @@ init session =
 
 type Msg
     = GotMessageResponse (Result Http.Error MessageResponse)
+    | GotDeleteResponse (Result Http.Error ())
     | Logout
     | Delete
 
@@ -79,11 +83,21 @@ update msg model =
                 Err _ ->
                     ( { model | messageResponse = Failure }, Cmd.none )
 
+        GotDeleteResponse result ->
+            case result of
+                Ok _ ->
+                    handleLogout model
+
+                Err _ ->
+                    ( { model | deleteResponse = Failure }, Cmd.none )
+
         Logout ->
             handleLogout model
 
         Delete ->
-            ( model, Cmd.none )
+            ( model
+            , Auth.delete GotDeleteResponse model.session
+            )
 
 
 updateModelOnSuccessResponse : Model -> MessageResponse -> ( Model, Cmd msg )
@@ -125,7 +139,11 @@ viewAccount model =
         , viewContentOrError model.messageResponse
         , viewButtonGroup
         , viewAlternative "Return to " "homepage" "" "/"
-        , viewPreloader model.messageResponse
+        , viewPreloader
+            (Request.isLoading
+                model.messageResponse
+                model.deleteResponse
+            )
         ]
 
 
@@ -197,8 +215,8 @@ type alias MessageResponse =
     }
 
 
-decodeResponse : Decoder MessageResponse
-decodeResponse =
+decodeMessageResponse : Decoder MessageResponse
+decodeMessageResponse =
     Decode.succeed MessageResponse
         |> required "collectionId" string
         |> required "collectionName" string

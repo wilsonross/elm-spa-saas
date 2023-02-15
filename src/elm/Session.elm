@@ -14,6 +14,7 @@ module Session exposing
     , updateSessionPath
     , updateSessionWithCookie
     , updateSessionWithJson
+    , userId
     )
 
 import Browser.Navigation as Nav
@@ -265,3 +266,13 @@ rememberMe remember =
 
     else
         0
+
+
+userId : Session -> String
+userId session =
+    case session of
+        User user ->
+            user.id
+
+        _ ->
+            ""
