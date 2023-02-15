@@ -2,7 +2,6 @@ const path = require("path");
 const autoprefixer = require("autoprefixer");
 const tailwindcss = require("tailwindcss")("./config/tailwind.config.js");
 
-const Dotenv = require("dotenv-webpack");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
@@ -80,7 +79,6 @@ module.exports = (env) => {
       new MiniCssExtractPlugin({
         filename: "static/css/[name]-[chunkhash].css",
       }),
-      new Dotenv(),
     ],
   };
 };
