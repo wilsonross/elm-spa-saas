@@ -241,6 +241,14 @@ forceGuestSession session =
         Loading guest ->
             initGuest guest
 
+        User user ->
+            initGuest
+                { key = user.key
+                , flags = user.flags
+                , path = user.path
+                , cookies = user.cookies
+                }
+
         _ ->
             session
 

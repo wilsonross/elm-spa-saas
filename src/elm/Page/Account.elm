@@ -1,5 +1,6 @@
 module Page.Account exposing (Model, Msg, init, update, view)
 
+import Browser.Navigation as Nav
 import Html exposing (Html, div, form, text)
 import Html.Attributes exposing (class)
 import Html.Parser as Parser
@@ -7,6 +8,7 @@ import Html.Parser.Util as HtmlParserUtil
 import Http
 import Json.Decode as Decode exposing (Decoder, bool, string)
 import Json.Decode.Pipeline exposing (optional, required)
+import Port
 import Request exposing (Status(..), viewPreloader)
 import Response
     exposing
@@ -78,7 +80,7 @@ update msg model =
                     ( { model | messageResponse = Failure }, Cmd.none )
 
         Logout ->
-            ( model, Cmd.none )
+            handleLogout model
 
         Delete ->
             ( model, Cmd.none )
@@ -161,6 +163,20 @@ viewButtonGroup =
         [ viewButtonImage [] Logout "/static/img/logout.svg"
         , viewButtonImage [] Delete "/static/img/delete.svg"
         ]
+
+
+
+-- HELPERS
+
+
+handleLogout : Model -> ( Model, Cmd Msg )
+handleLogout model =
+    ( { model | session = Session.forceGuestSession model.session }
+    , Cmd.batch
+        [ Port.setSession ( "", 0 )
+        , Nav.pushUrl (Session.navKey model.session) "/"
+        ]
+    )
 
 
 
