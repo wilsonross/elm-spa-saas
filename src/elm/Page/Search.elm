@@ -176,7 +176,9 @@ viewSearchItemImage url =
 
     else
         img
-            [ src url, class "w-16 h-16 shrink-0 hidden sm:block" ]
+            [ src url
+            , class "w-16 h-16 shrink-0 hidden sm:block object-cover"
+            ]
             []
 
 
