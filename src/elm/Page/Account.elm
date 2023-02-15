@@ -2,8 +2,8 @@ module Page.Account exposing (Model, Msg, init, update, view)
 
 import Auth
 import Browser.Navigation as Nav
-import Html exposing (Html, div, form, text)
-import Html.Attributes exposing (class)
+import Html exposing (Html, button, div, form, img, text)
+import Html.Attributes exposing (class, src)
 import Html.Parser as Parser
 import Html.Parser.Util as HtmlParserUtil
 import Http
@@ -22,7 +22,6 @@ import View
     exposing
         ( viewAlternative
         , viewAuthLogo
-        , viewButtonImage
         , viewTitle
         )
 
@@ -177,9 +176,30 @@ viewContent content =
 viewButtonGroup : Html Msg
 viewButtonGroup =
     div
-        [ class "flex gap-6 mb-4" ]
-        [ viewButtonImage [] Logout "/static/img/logout.svg"
-        , viewButtonImage [] Delete "/static/img/delete.svg"
+        [ class "sm:flex sm:gap-6 mb-4" ]
+        [ viewButton Logout "/static/img/logout.svg"
+        , viewButton Delete "/static/img/delete.svg"
+        ]
+
+
+viewButton : msg -> String -> Html msg
+viewButton msg image =
+    div
+        [ class <|
+            "bg-black rounded  h-[3.25rem] mb-5 sm:mb-0 last:mb-0 sm:w-1/2"
+        ]
+        [ button
+            [ View.preventDefault msg
+            , class <|
+                "block shrink-0 focus:outline-none flex justify-center w-full"
+                    ++ " items-center h-full"
+            ]
+            [ img
+                [ src image
+                , class "block"
+                ]
+                []
+            ]
         ]
 
 
