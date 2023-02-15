@@ -3,11 +3,13 @@ import "./style.css";
 
 const node = document.getElementById("main");
 const apiUrl = process.env.APP_API_URL;
+const accountMessageId = process.env.APP_ACCOUNT_MESSAGE_ID;
 
 const app = Elm.Main.init({
   node: node,
   flags: {
     apiUrl: apiUrl,
+    accountMessageId: accountMessageId,
   },
 });
 

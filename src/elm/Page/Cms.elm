@@ -7,8 +7,8 @@ import Html.Attributes exposing (class)
 import Html.Parser as Parser
 import Html.Parser.Util as HtmlParserUtil
 import Http
-import Json.Decode as Decode exposing (Decoder, string)
-import Json.Decode.Pipeline exposing (required)
+import Json.Decode as Decode exposing (Decoder, bool, string)
+import Json.Decode.Pipeline exposing (optional, required)
 import Page exposing (viewComponent)
 import Request exposing (Status(..), viewPreloader)
 import Session exposing (Session)
@@ -185,6 +185,9 @@ type alias Response =
     , content : String
     , created : String
     , id : String
+    , image : String
+    , searchable : Bool
+    , tagline : String
     , title : String
     , updated : String
     }
@@ -198,5 +201,8 @@ decodeResponse =
         |> required "content" string
         |> required "created" string
         |> required "id" string
+        |> optional "image" string ""
+        |> required "searchable" bool
+        |> required "tagline" string
         |> required "title" string
-        |> required "content" string
+        |> required "updated" string

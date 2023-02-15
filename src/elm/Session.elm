@@ -2,6 +2,7 @@ module Session exposing
     ( Cookie
     , Flags
     , Session(..)
+    , accountMessageId
     , apiUrl
     , forceGuestSession
     , initGuest
@@ -31,6 +32,7 @@ type alias Cookie =
 
 type alias Flags =
     { apiUrl : String
+    , accountMessageId : String
     }
 
 
@@ -119,6 +121,19 @@ apiUrl session =
 
         User user ->
             user.flags.apiUrl
+
+
+accountMessageId : Session -> String
+accountMessageId session =
+    case session of
+        Loading guest ->
+            guest.flags.accountMessageId
+
+        Guest guest ->
+            guest.flags.accountMessageId
+
+        User user ->
+            user.flags.accountMessageId
 
 
 updateSessionWithCookie : Cookie -> Session -> Session

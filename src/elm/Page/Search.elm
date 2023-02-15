@@ -4,7 +4,7 @@ import Header exposing (Status)
 import Html exposing (Html, a, div, h1, h3, img, p, text)
 import Html.Attributes exposing (class, href, src)
 import Http
-import Json.Decode as Decode exposing (Decoder, string)
+import Json.Decode as Decode exposing (Decoder, bool, string)
 import Json.Decode.Pipeline exposing (optional, required)
 import Page exposing (viewComponent)
 import Request exposing (Status(..))
@@ -262,6 +262,7 @@ type alias CollectionResponse =
     , created : String
     , id : String
     , image : String
+    , searchable : Bool
     , tagline : String
     , title : String
     , updated : String
@@ -277,6 +278,7 @@ decodeCollectionResponse =
         |> required "created" string
         |> required "id" string
         |> optional "image" string ""
+        |> required "searchable" bool
         |> required "tagline" string
         |> required "title" string
         |> required "updated" string
