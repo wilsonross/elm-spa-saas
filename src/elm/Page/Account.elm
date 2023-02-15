@@ -22,6 +22,7 @@ import View
     exposing
         ( viewAlternative
         , viewAuthLogo
+        , viewErrors
         , viewTitle
         )
 
@@ -69,6 +70,7 @@ type Msg
     | GotDeleteResponse (Result Http.Error ())
     | Logout
     | Delete
+    | ResetDeleteError
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -88,7 +90,9 @@ update msg model =
                     handleLogout model
 
                 Err _ ->
-                    ( { model | deleteResponse = Failure }, Cmd.none )
+                    ( { model | deleteResponse = Failure }
+                    , View.delay 2500 ResetDeleteError
+                    )
 
         Logout ->
             handleLogout model
@@ -97,6 +101,9 @@ update msg model =
             ( model
             , Auth.delete GotDeleteResponse model.session
             )
+
+        ResetDeleteError ->
+            ( { model | deleteResponse = None }, Cmd.none )
 
 
 updateModelOnSuccessResponse : Model -> MessageResponse -> ( Model, Cmd msg )
@@ -121,6 +128,7 @@ view model =
                 "flex justify-center items-center h-screen rounded-md px-4"
             ]
             [ viewAccount model
+            , viewCouldNotDelete model.deleteResponse
             ]
     }
 
@@ -170,7 +178,13 @@ viewContent content =
                 (HtmlParserUtil.toVirtualDom html)
 
         Err _ ->
-            text content
+            viewMessageError
+
+
+viewMessageError : Html msg
+viewMessageError =
+    div [ class "justify-center text-grey-2 text-center" ]
+        [ text "Could not load message" ]
 
 
 viewButtonGroup : Html Msg
@@ -201,6 +215,20 @@ viewButton msg image =
                 []
             ]
         ]
+
+
+viewCouldNotDelete : Status () -> Html msg
+viewCouldNotDelete status =
+    case status of
+        Failure ->
+            viewErrors
+                [ { code = ""
+                  , message = "Could not delete"
+                  }
+                ]
+
+        _ ->
+            text ""
 
 
 
