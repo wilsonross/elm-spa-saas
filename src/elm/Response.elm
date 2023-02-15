@@ -2,6 +2,7 @@ module Response exposing
     ( AuthErrorData
     , AuthJsonResponse
     , AuthResponse
+    , CmsResponse
     , ErrorDetailed(..)
     , ErrorMessage
     , ErrorResponse
@@ -11,6 +12,7 @@ module Response exposing
     , UserResponse
     , decodeAuthErrorData
     , decodeAuthResponse
+    , decodeCmsResponse
     , decodeErrorMessage
     , decodeErrorResponse
     , decodePaginatedResponse
@@ -85,6 +87,40 @@ convertResponseString httpResponse =
 -- JSON
 
 
+type JsonResponse errorData successfulResponse
+    = JsonError (ErrorResponse errorData)
+    | JsonSuccess successfulResponse
+    | JsonNone Error
+
+
+stringToJson : Decoder err -> Decoder success -> String -> JsonResponse err success
+stringToJson decoderErr decoderSuccess jsonString =
+    case Decode.decodeString decoderSuccess jsonString of
+        Ok res ->
+            JsonSuccess res
+
+        Err _ ->
+            stringToJson_ decoderErr jsonString
+
+
+stringToJson_ : Decoder err -> String -> JsonResponse err success
+stringToJson_ decodeErr jsonString =
+    let
+        decoder =
+            decodeErrorResponse decodeErr
+    in
+    case Decode.decodeString decoder jsonString of
+        Ok res ->
+            JsonError res
+
+        Err err ->
+            JsonNone err
+
+
+
+-- USER
+
+
 type alias UserResponse =
     { collectionId : String
     , collectionName : String
@@ -116,10 +152,8 @@ decodeUserResponse =
         |> required "verified" bool
 
 
-type JsonResponse errorData successfulResponse
-    = JsonError (ErrorResponse errorData)
-    | JsonSuccess successfulResponse
-    | JsonNone Error
+
+-- ERROR
 
 
 type alias ErrorResponse errorData =
@@ -129,18 +163,18 @@ type alias ErrorResponse errorData =
     }
 
 
+type alias ErrorMessage =
+    { code : String
+    , message : String
+    }
+
+
 decodeErrorResponse : Decoder errorData -> Decoder (ErrorResponse errorData)
 decodeErrorResponse decodeErrorData =
     Decode.succeed ErrorResponse
         |> required "code" int
         |> required "message" string
         |> required "data" decodeErrorData
-
-
-type alias ErrorMessage =
-    { code : String
-    , message : String
-    }
 
 
 decodeErrorMessage : Decoder ErrorMessage
@@ -167,28 +201,18 @@ prependMaybeError maybe list =
             list
 
 
-stringToJson : Decoder err -> Decoder success -> String -> JsonResponse err success
-stringToJson decoderErr decoderSuccess jsonString =
-    case Decode.decodeString decoderSuccess jsonString of
-        Ok res ->
-            JsonSuccess res
 
-        Err _ ->
-            stringToJson_ decoderErr jsonString
+-- AUTH
 
 
-stringToJson_ : Decoder err -> String -> JsonResponse err success
-stringToJson_ decodeErr jsonString =
-    let
-        decoder =
-            decodeErrorResponse decodeErr
-    in
-    case Decode.decodeString decoder jsonString of
-        Ok res ->
-            JsonError res
+type alias AuthJsonResponse =
+    JsonResponse AuthErrorData AuthResponse
 
-        Err err ->
-            JsonNone err
+
+type alias AuthErrorData =
+    { identity : Maybe ErrorMessage
+    , password : Maybe ErrorMessage
+    }
 
 
 type alias AuthResponse =
@@ -202,16 +226,6 @@ decodeAuthResponse =
     Decode.succeed AuthResponse
         |> required "record" decodeUserResponse
         |> required "token" string
-
-
-type alias AuthJsonResponse =
-    JsonResponse AuthErrorData AuthResponse
-
-
-type alias AuthErrorData =
-    { identity : Maybe ErrorMessage
-    , password : Maybe ErrorMessage
-    }
 
 
 decodeAuthErrorData : Decoder AuthErrorData
@@ -273,6 +287,10 @@ defaultAuthErrorMessage list =
         list
 
 
+
+-- PAGINATION
+
+
 type alias PaginatedResponse items =
     { page : Int
     , perPage : Int
@@ -290,3 +308,36 @@ decodePaginatedResponse itemDecoder =
         |> required "totalItems" int
         |> required "totalPages" int
         |> custom (at [ "items" ] (list itemDecoder))
+
+
+
+-- CMS
+
+
+type alias CmsResponse =
+    { collectionId : String
+    , collectionName : String
+    , content : String
+    , created : String
+    , id : String
+    , image : String
+    , searchable : Bool
+    , tagline : String
+    , title : String
+    , updated : String
+    }
+
+
+decodeCmsResponse : Decoder CmsResponse
+decodeCmsResponse =
+    Decode.succeed CmsResponse
+        |> required "collectionId" string
+        |> required "collectionName" string
+        |> required "content" string
+        |> required "created" string
+        |> required "id" string
+        |> optional "image" string ""
+        |> required "searchable" bool
+        |> required "tagline" string
+        |> required "title" string
+        |> required "updated" string

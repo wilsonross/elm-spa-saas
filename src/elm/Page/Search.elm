@@ -4,11 +4,9 @@ import Header exposing (Status)
 import Html exposing (Html, a, div, h1, h3, img, p, text)
 import Html.Attributes exposing (class, href, src)
 import Http
-import Json.Decode as Decode exposing (Decoder, bool, string)
-import Json.Decode.Pipeline exposing (optional, required)
 import Page exposing (viewComponent)
 import Request exposing (Status(..))
-import Response exposing (PaginatedResponse)
+import Response exposing (CmsResponse, PaginatedResponse)
 import Session exposing (Session)
 
 
@@ -25,7 +23,7 @@ type alias Model =
 
 
 type alias SearchResponse =
-    PaginatedResponse (List CollectionResponse)
+    PaginatedResponse (List CmsResponse)
 
 
 init : Session -> String -> ( Model, Cmd Msg )
@@ -50,7 +48,7 @@ init session query =
                 Http.expectJson
                     GotResponse
                     (Response.decodePaginatedResponse
-                        decodeCollectionResponse
+                        Response.decodeCmsResponse
                     )
             }
         ]
@@ -166,7 +164,7 @@ viewSearchItems status =
                 []
 
 
-viewSearchItem : CollectionResponse -> Html msg
+viewSearchItem : CmsResponse -> Html msg
 viewSearchItem collectionResponse =
     a
         [ href ("/cms/" ++ collectionResponse.id)
@@ -192,7 +190,7 @@ viewSearchItemImage url =
             []
 
 
-viewSearchItemBody : CollectionResponse -> Html msg
+viewSearchItemBody : CmsResponse -> Html msg
 viewSearchItemBody collectionResponse =
     div
         [ class "p-0 sm:pl-[1.125rem] flex flex-col justify-center gap-[6px]" ]
@@ -249,36 +247,3 @@ searchBuilder query =
         ++ "'||tagline~'"
         ++ query
         ++ "')"
-
-
-
--- JSON
-
-
-type alias CollectionResponse =
-    { collectionId : String
-    , collectionName : String
-    , content : String
-    , created : String
-    , id : String
-    , image : String
-    , searchable : Bool
-    , tagline : String
-    , title : String
-    , updated : String
-    }
-
-
-decodeCollectionResponse : Decoder CollectionResponse
-decodeCollectionResponse =
-    Decode.succeed CollectionResponse
-        |> required "collectionId" string
-        |> required "collectionName" string
-        |> required "content" string
-        |> required "created" string
-        |> required "id" string
-        |> optional "image" string ""
-        |> required "searchable" bool
-        |> required "tagline" string
-        |> required "title" string
-        |> required "updated" string

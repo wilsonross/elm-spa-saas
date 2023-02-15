@@ -7,13 +7,12 @@ import Html.Attributes exposing (class, src)
 import Html.Parser as Parser
 import Html.Parser.Util as HtmlParserUtil
 import Http
-import Json.Decode as Decode exposing (Decoder, bool, string)
-import Json.Decode.Pipeline exposing (optional, required)
 import Port
 import Request exposing (Status(..), viewPreloader)
 import Response
     exposing
-        ( ErrorDetailed(..)
+        ( CmsResponse
+        , ErrorDetailed(..)
         , JsonResponse(..)
         )
 import Route
@@ -33,7 +32,7 @@ import View
 
 type alias Model =
     { session : Session
-    , messageResponse : Status MessageResponse
+    , messageResponse : Status CmsResponse
     , deleteResponse : Status ()
     }
 
@@ -54,8 +53,8 @@ init session =
                     ++ Session.accountMessageId session
             , expect =
                 Http.expectJson
-                    GotMessageResponse
-                    decodeMessageResponse
+                    GotCmsResponse
+                    Response.decodeCmsResponse
             }
         ]
     )
@@ -66,7 +65,7 @@ init session =
 
 
 type Msg
-    = GotMessageResponse (Result Http.Error MessageResponse)
+    = GotCmsResponse (Result Http.Error CmsResponse)
     | GotDeleteResponse (Result Http.Error ())
     | Logout
     | Delete
@@ -76,7 +75,7 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        GotMessageResponse result ->
+        GotCmsResponse result ->
             case result of
                 Ok res ->
                     updateModelOnSuccessResponse model res
@@ -106,7 +105,7 @@ update msg model =
             ( { model | deleteResponse = None }, Cmd.none )
 
 
-updateModelOnSuccessResponse : Model -> MessageResponse -> ( Model, Cmd msg )
+updateModelOnSuccessResponse : Model -> CmsResponse -> ( Model, Cmd msg )
 updateModelOnSuccessResponse model response =
     ( { model
         | messageResponse = Request.Response response
@@ -154,7 +153,7 @@ viewAccount model =
         ]
 
 
-viewContentOrError : Status MessageResponse -> Html msg
+viewContentOrError : Status CmsResponse -> Html msg
 viewContentOrError status =
     case status of
         Request.Response response ->
@@ -243,36 +242,3 @@ handleLogout model =
         , Nav.pushUrl (Session.navKey model.session) "/"
         ]
     )
-
-
-
--- JSON
-
-
-type alias MessageResponse =
-    { collectionId : String
-    , collectionName : String
-    , content : String
-    , created : String
-    , id : String
-    , image : String
-    , searchable : Bool
-    , tagline : String
-    , title : String
-    , updated : String
-    }
-
-
-decodeMessageResponse : Decoder MessageResponse
-decodeMessageResponse =
-    Decode.succeed MessageResponse
-        |> required "collectionId" string
-        |> required "collectionName" string
-        |> required "content" string
-        |> required "created" string
-        |> required "id" string
-        |> optional "image" string ""
-        |> required "searchable" bool
-        |> required "tagline" string
-        |> required "title" string
-        |> required "updated" string

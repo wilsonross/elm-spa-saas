@@ -7,10 +7,9 @@ import Html.Attributes exposing (class)
 import Html.Parser as Parser
 import Html.Parser.Util as HtmlParserUtil
 import Http
-import Json.Decode as Decode exposing (Decoder, bool, string)
-import Json.Decode.Pipeline exposing (optional, required)
 import Page exposing (viewComponent)
 import Request exposing (Status(..), viewPreloader)
+import Response exposing (CmsResponse)
 import Session exposing (Session)
 
 
@@ -21,7 +20,7 @@ import Session exposing (Session)
 type alias Model =
     { session : Session
     , header : Header.Model
-    , response : Status Response
+    , response : Status CmsResponse
     , id : String
     , title : String
     , content : String
@@ -52,8 +51,8 @@ init session id =
                     )
             , expect =
                 Http.expectJson
-                    GotResponse
-                    decodeResponse
+                    GotCmsResponse
+                    Response.decodeCmsResponse
             }
         ]
     )
@@ -65,7 +64,7 @@ init session id =
 
 type Msg
     = GotHeaderMsg Header.Msg
-    | GotResponse (Result Http.Error Response)
+    | GotCmsResponse (Result Http.Error CmsResponse)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -75,10 +74,10 @@ update msg model =
             Header.update subMsg model.header
                 |> updateWith model GotHeaderMsg
 
-        GotResponse result ->
+        GotCmsResponse result ->
             case result of
                 Ok res ->
-                    updateModelOnSuccessResponse model res
+                    updateModelOnSuccessCmsResponse model res
 
                 Err _ ->
                     ( { model | response = Failure }
@@ -86,8 +85,8 @@ update msg model =
                     )
 
 
-updateModelOnSuccessResponse : Model -> Response -> ( Model, Cmd msg )
-updateModelOnSuccessResponse model response =
+updateModelOnSuccessCmsResponse : Model -> CmsResponse -> ( Model, Cmd msg )
+updateModelOnSuccessCmsResponse model response =
     ( { model
         | response = Request.Response response
         , title = response.title
@@ -173,36 +172,3 @@ viewContent content =
 
         Err _ ->
             text content
-
-
-
--- JSON
-
-
-type alias Response =
-    { collectionId : String
-    , collectionName : String
-    , content : String
-    , created : String
-    , id : String
-    , image : String
-    , searchable : Bool
-    , tagline : String
-    , title : String
-    , updated : String
-    }
-
-
-decodeResponse : Decoder Response
-decodeResponse =
-    Decode.succeed Response
-        |> required "collectionId" string
-        |> required "collectionName" string
-        |> required "content" string
-        |> required "created" string
-        |> required "id" string
-        |> optional "image" string ""
-        |> required "searchable" bool
-        |> required "tagline" string
-        |> required "title" string
-        |> required "updated" string
