@@ -2,8 +2,6 @@ module Session exposing
     ( Cookie
     , Flags
     , Session(..)
-    , accountMessageId
-    , apiUrl
     , forceGuestSession
     , initGuest
     , initLoading
@@ -11,6 +9,7 @@ module Session exposing
     , pathFromSession
     , rememberMe
     , sessionToCookieToken
+    , toFlag
     , updateSessionPath
     , updateSessionWithCookie
     , updateSessionWithJson
@@ -33,7 +32,8 @@ type alias Cookie =
 
 type alias Flags =
     { apiUrl : String
-    , accountMessageId : String
+    , cmsAccountId : String
+    , cmsCtaId : String
     }
 
 
@@ -111,30 +111,17 @@ navKey session =
             key
 
 
-apiUrl : Session -> String
-apiUrl session =
+toFlag : Session -> (Flags -> a) -> a
+toFlag session flag =
     case session of
         Loading guest ->
-            guest.flags.apiUrl
+            flag guest.flags
 
         Guest guest ->
-            guest.flags.apiUrl
+            flag guest.flags
 
         User user ->
-            user.flags.apiUrl
-
-
-accountMessageId : Session -> String
-accountMessageId session =
-    case session of
-        Loading guest ->
-            guest.flags.accountMessageId
-
-        Guest guest ->
-            guest.flags.accountMessageId
-
-        User user ->
-            user.flags.accountMessageId
+            flag user.flags
 
 
 updateSessionWithCookie : Cookie -> Session -> Session

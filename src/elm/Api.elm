@@ -32,7 +32,7 @@ authRefresh toMsg session =
             ]
         , url =
             Request.joinUrl
-                (Session.apiUrl session)
+                (Session.toFlag session (\f -> f.apiUrl))
                 "/api/collections/users/auth-refresh"
         , body = Http.emptyBody
         , expect = Response.expectStringDetailed toMsg
@@ -45,7 +45,8 @@ authWithPassword : (ResponseResult -> msg) -> Session -> Input -> Input -> Cmd m
 authWithPassword toMsg session identity password =
     Http.post
         { url =
-            Request.joinUrl (Session.apiUrl session)
+            Request.joinUrl
+                (Session.toFlag session (\f -> f.apiUrl))
                 "/api/collections/users/auth-with-password"
         , body =
             Http.jsonBody
@@ -63,7 +64,7 @@ create toMsg session email password passwordConfirm firstName lastName =
     Http.post
         { url =
             Request.joinUrl
-                (Session.apiUrl session)
+                (Session.toFlag session (\f -> f.apiUrl))
                 "/api/collections/users/records"
         , body =
             Http.jsonBody
@@ -84,7 +85,7 @@ requestPasswordReset toMsg session email =
     Http.post
         { url =
             Request.joinUrl
-                (Session.apiUrl session)
+                (Session.toFlag session (\f -> f.apiUrl))
                 "/api/collections/users/request-password-reset"
         , body =
             Http.jsonBody
@@ -107,7 +108,7 @@ delete toMsg session =
             ]
         , url =
             Request.joinUrl
-                (Session.apiUrl session)
+                (Session.toFlag session (\f -> f.apiUrl))
                 "/api/collections/users/records/"
                 ++ Session.userId session
         , body = Http.emptyBody
@@ -126,7 +127,7 @@ cms decoder toMsg session id =
     Http.get
         { url =
             Request.joinUrl
-                (Session.apiUrl session)
+                (Session.toFlag session (\f -> f.apiUrl))
                 ("/api/collections/cms/records/" ++ id)
         , expect = Http.expectJson toMsg decoder
         }
@@ -137,7 +138,7 @@ cmsSearch decoder toMsg session query =
     Http.get
         { url =
             Request.joinUrl
-                (Session.apiUrl session)
+                (Session.toFlag session (\f -> f.apiUrl))
                 (searchBuilder query)
         , expect =
             Http.expectJson
@@ -155,7 +156,7 @@ linksList decoder toMsg session =
     Http.get
         { url =
             Request.joinUrl
-                (Session.apiUrl session)
+                (Session.toFlag session (\f -> f.apiUrl))
                 "/api/collections/links/records"
         , expect =
             Http.expectJson

@@ -3,13 +3,15 @@ import "./style.css";
 
 const node = document.getElementById("main");
 const apiUrl = process.env.APP_API_URL;
-const accountMessageId = process.env.APP_ACCOUNT_MESSAGE_ID;
+const cmsAccountId = process.env.APP_CMS_ACCOUNT_ID;
+const cmsCtaId = process.env.APP_CMS_CTA_ID;
 
 const app = Elm.Main.init({
   node: node,
   flags: {
     apiUrl: apiUrl,
-    accountMessageId: accountMessageId,
+    cmsAccountId: cmsAccountId,
+    cmsCtaId: cmsCtaId,
   },
 });
 

@@ -45,7 +45,7 @@ init session =
       }
     , Cmd.batch
         [ Route.protected session False
-        , Session.accountMessageId session
+        , Session.toFlag session (\f -> f.cmsAccountId)
             |> Api.cms Response.decodeCmsResponse GotCmsResponse session
         ]
     )

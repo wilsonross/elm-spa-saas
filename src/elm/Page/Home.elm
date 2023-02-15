@@ -51,7 +51,9 @@ view model =
                 [ div
                     [ class "h-full lg:w-1/2"
                     ]
-                    [ viewCta, viewCarouselLoader model.header.links ]
+                    [ viewCta (Session.toFlag model.session (\f -> f.cmsCtaId))
+                    , viewCarouselLoader model.header.links
+                    ]
                 , viewGraphic
                 ]
             ]
@@ -64,14 +66,14 @@ viewHeader model =
         |> viewComponent GotHeaderMsg
 
 
-viewCta : Html msg
-viewCta =
+viewCta : String -> Html msg
+viewCta linkId =
     div
         [ class <|
             "flex flex-col justify-center mb-[3.75rem] md:mb-16 lg:mb-0"
                 ++ " h-[calc(100%_-_var(--home-carousel-height))]"
         ]
-        [ viewTitle, viewDescription, viewButton ]
+        [ viewTitle, viewDescription, viewButton linkId ]
 
 
 viewTitle : Html msg
@@ -101,15 +103,15 @@ viewDescription =
         ]
 
 
-viewButton : Html msg
-viewButton =
+viewButton : String -> Html msg
+viewButton linkId =
     viewLink
         [ class <|
             "h-[3.375rem] rounded-md bg-black flex sm:w-fit text-white"
                 ++ " justify-center items-center px-[1.125rem] font-semibold"
                 ++ " text-lg leading-[1.625rem]"
         ]
-        "/contact"
+        ("/cms/" ++ linkId)
         "Lets Talk Buisness"
 
 
