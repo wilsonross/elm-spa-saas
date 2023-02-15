@@ -1,6 +1,6 @@
 module Main exposing (main)
 
-import Auth
+import Api
 import Browser exposing (Document)
 import Browser.Navigation as Nav
 import Html exposing (..)
@@ -390,7 +390,7 @@ authRefresh : Model -> ( Model, Cmd Msg )
 authRefresh model =
     ( model
     , toSession model
-        |> Auth.authRefresh GotAuthRefreshResponse
+        |> Api.authRefresh GotAuthRefreshResponse
     )
 
 

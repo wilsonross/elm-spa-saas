@@ -1,6 +1,6 @@
 module Page.Account exposing (Model, Msg, init, update, view)
 
-import Auth
+import Api
 import Browser.Navigation as Nav
 import Html exposing (Html, button, div, form, img, text)
 import Html.Attributes exposing (class, src)
@@ -45,17 +45,8 @@ init session =
       }
     , Cmd.batch
         [ Route.protected session False
-        , Http.get
-            { url =
-                Request.joinUrl
-                    (Session.apiUrl session)
-                    "/api/collections/cms/records/"
-                    ++ Session.accountMessageId session
-            , expect =
-                Http.expectJson
-                    GotCmsResponse
-                    Response.decodeCmsResponse
-            }
+        , Session.accountMessageId session
+            |> Api.cms Response.decodeCmsResponse GotCmsResponse session
         ]
     )
 
@@ -98,7 +89,7 @@ update msg model =
 
         Delete ->
             ( model
-            , Auth.delete GotDeleteResponse model.session
+            , Api.delete GotDeleteResponse model.session
             )
 
         ResetDeleteError ->

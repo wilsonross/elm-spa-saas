@@ -1,6 +1,6 @@
 module Page.ForgotPassword exposing (Model, Msg, init, update, view)
 
-import Auth
+import Api
 import Html exposing (Html, div)
 import Html.Attributes exposing (class, name, type_)
 import Http exposing (Error)
@@ -160,7 +160,7 @@ shouldRequest model =
     case model.email of
         Valid _ ->
             ( { model | response = Loading }
-            , Auth.requestPasswordReset
+            , Api.requestPasswordReset
                 GotForgotPasswordResponse
                 model.session
                 model.email

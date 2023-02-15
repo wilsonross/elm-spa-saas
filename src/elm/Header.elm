@@ -10,6 +10,7 @@ module Header exposing
     , view
     )
 
+import Api
 import Browser.Navigation as Nav
 import Compare exposing (Comparator)
 import Html exposing (Html, button, div, form, img, input, li, text, ul)
@@ -19,7 +20,6 @@ import Http
 import Input exposing (Input(..))
 import Json.Decode as Decode exposing (Decoder, int, string)
 import Json.Decode.Pipeline exposing (optional, required)
-import Request
 import Response exposing (PaginatedResponse)
 import Session exposing (Session(..))
 import View
@@ -61,16 +61,7 @@ init session =
       , path = Session.pathFromSession session
       , search = Empty
       }
-    , Http.get
-        { url =
-            Request.joinUrl
-                (Session.apiUrl session)
-                "/api/collections/links/records"
-        , expect =
-            Http.expectJson
-                GotPaginatedResponse
-                (Response.decodePaginatedResponse decodeCollectionResponse)
-        }
+    , Api.linksList decodeCollectionResponse GotPaginatedResponse session
     )
 
 

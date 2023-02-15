@@ -1,5 +1,6 @@
 module Page.Search exposing (Model, Msg, init, update, view)
 
+import Api
 import Header exposing (Status)
 import Html exposing (Html, a, div, h1, h3, img, p, text)
 import Html.Attributes exposing (class, href, src)
@@ -39,18 +40,7 @@ init session query =
       }
     , Cmd.batch
         [ Cmd.map GotHeaderMsg subMsg
-        , Http.get
-            { url =
-                Request.joinUrl
-                    (Session.apiUrl session)
-                    (searchBuilder query)
-            , expect =
-                Http.expectJson
-                    GotResponse
-                    (Response.decodePaginatedResponse
-                        Response.decodeCmsResponse
-                    )
-            }
+        , Api.cmsSearch Response.decodeCmsResponse GotResponse session query
         ]
     )
 
@@ -238,12 +228,3 @@ capitalize str =
     String.toUpper
         (String.left 1 str)
         ++ String.dropLeft 1 str
-
-
-searchBuilder : String -> String
-searchBuilder query =
-    "/api/collections/cms/records?filter=(title~'"
-        ++ query
-        ++ "'||tagline~'"
-        ++ query
-        ++ "')"

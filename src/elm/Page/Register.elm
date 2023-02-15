@@ -1,6 +1,6 @@
 module Page.Register exposing (Model, Msg, init, update, view)
 
-import Auth
+import Api
 import Browser.Navigation as Nav
 import Html exposing (Html, div, form)
 import Html.Attributes exposing (class, name, type_)
@@ -96,7 +96,7 @@ update msg model =
 
         Register ->
             ( { model | registerResponse = Loading }
-            , Auth.create
+            , Api.create
                 GotRegisterResponse
                 model.session
                 model.email
@@ -108,7 +108,7 @@ update msg model =
 
         Login ->
             ( { model | loginResponse = Loading }
-            , Auth.authWithPassword
+            , Api.authWithPassword
                 GotLoginResponse
                 model.session
                 model.email

@@ -1,5 +1,6 @@
 module Page.Cms exposing (Model, Msg, init, update, view)
 
+import Api
 import Browser.Navigation as Nav
 import Header exposing (Status)
 import Html exposing (Html, div, h1, text)
@@ -42,18 +43,7 @@ init session id =
       }
     , Cmd.batch
         [ Cmd.map GotHeaderMsg subMsg
-        , Http.get
-            { url =
-                Request.joinUrl
-                    (Session.apiUrl session)
-                    ("/api/collections/cms/records/"
-                        ++ id
-                    )
-            , expect =
-                Http.expectJson
-                    GotCmsResponse
-                    Response.decodeCmsResponse
-            }
+        , Api.cms Response.decodeCmsResponse GotCmsResponse session id
         ]
     )
 

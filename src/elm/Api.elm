@@ -1,20 +1,24 @@
-module Auth exposing
+module Api exposing
     ( authRefresh
     , authWithPassword
+    , cms
+    , cmsSearch
     , create
     , delete
+    , linksList
     , requestPasswordReset
     )
 
 import Http exposing (Error)
 import Input exposing (Input)
+import Json.Decode exposing (Decoder)
 import Request
-import Response exposing (ResponseResult)
+import Response exposing (PaginatedResponse, ResponseResult)
 import Session exposing (Session)
 
 
 
--- HELPERS
+-- AUTH
 
 
 authRefresh : (ResponseResult -> msg) -> Session -> Cmd msg
@@ -111,3 +115,63 @@ delete toMsg session =
         , timeout = Nothing
         , tracker = Nothing
         }
+
+
+
+-- CMS
+
+
+cms : Decoder response -> (Result Http.Error response -> msg) -> Session -> String -> Cmd msg
+cms decoder toMsg session id =
+    Http.get
+        { url =
+            Request.joinUrl
+                (Session.apiUrl session)
+                ("/api/collections/cms/records/" ++ id)
+        , expect = Http.expectJson toMsg decoder
+        }
+
+
+cmsSearch : Decoder response -> (Result Http.Error (PaginatedResponse (List response)) -> msg) -> Session -> String -> Cmd msg
+cmsSearch decoder toMsg session query =
+    Http.get
+        { url =
+            Request.joinUrl
+                (Session.apiUrl session)
+                (searchBuilder query)
+        , expect =
+            Http.expectJson
+                toMsg
+                (Response.decodePaginatedResponse decoder)
+        }
+
+
+
+-- LINKS
+
+
+linksList : Decoder response -> (Result Http.Error (PaginatedResponse (List response)) -> msg) -> Session -> Cmd msg
+linksList decoder toMsg session =
+    Http.get
+        { url =
+            Request.joinUrl
+                (Session.apiUrl session)
+                "/api/collections/links/records"
+        , expect =
+            Http.expectJson
+                toMsg
+                (Response.decodePaginatedResponse decoder)
+        }
+
+
+
+-- HELPERS
+
+
+searchBuilder : String -> String
+searchBuilder query =
+    "/api/collections/cms/records?filter=(title~'"
+        ++ query
+        ++ "'||tagline~'"
+        ++ query
+        ++ "')"

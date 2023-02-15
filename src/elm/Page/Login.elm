@@ -1,6 +1,6 @@
 module Page.Login exposing (Model, Msg, init, update, view)
 
-import Auth
+import Api
 import Browser.Navigation as Nav
 import Html exposing (Html, div, form)
 import Html.Attributes exposing (class, name, type_)
@@ -75,7 +75,7 @@ update msg model =
 
         Login ->
             ( { model | response = Loading }
-            , Auth.authWithPassword
+            , Api.authWithPassword
                 GotLoginResponse
                 model.session
                 model.identity
