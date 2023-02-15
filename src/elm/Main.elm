@@ -6,6 +6,7 @@ import Browser.Navigation as Nav
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Page
+import Page.Account as Account
 import Page.Cms as Cms
 import Page.Error as Error
 import Page.ForgotPassword as ForgotPassword
@@ -52,6 +53,7 @@ type Model
     | ForgotPassword ForgotPassword.Model
     | Cms Cms.Model
     | Search Search.Model
+    | Account Account.Model
 
 
 init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
@@ -79,6 +81,7 @@ type Msg
     | GotForgotPasswordMsg ForgotPassword.Msg
     | GotCmsMsg Cms.Msg
     | GotSearchMsg Search.Msg
+    | GotAccountMsg Account.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -133,6 +136,10 @@ update msg model =
             Search.update subMsg search
                 |> updateWith Search GotSearchMsg
 
+        ( GotAccountMsg subMsg, Account account ) ->
+            Account.update subMsg account
+                |> updateWith Account GotAccountMsg
+
         ( _, _ ) ->
             ( model, Cmd.none )
 
@@ -167,6 +174,9 @@ updateModelWithSession model session =
 
         Search search ->
             Search { search | session = session }
+
+        Account account ->
+            Account { account | session = session }
 
 
 updateSessionWithResult : ResponseResult -> Session -> Session
@@ -217,6 +227,9 @@ view model =
         Search search ->
             Page.viewPage GotSearchMsg (Search.view search)
 
+        Account account ->
+            Page.viewPage GotAccountMsg (Account.view account)
+
 
 
 -- HELPERS
@@ -245,6 +258,9 @@ toSession model =
 
         Search search ->
             search.session
+
+        Account account ->
+            account.session
 
 
 changeRouteTo : Url.Url -> Model -> ( Model, Cmd Msg )
@@ -284,7 +300,8 @@ changeRouteTo url model =
                 |> updateWith Search GotSearchMsg
 
         Just Route.Account ->
-            underConstruction session
+            Account.init session
+                |> updateWith Account GotAccountMsg
 
         Just Route.Contact ->
             underConstruction session
@@ -329,6 +346,11 @@ resetModel model msg =
         Search search ->
             Search.init search.session search.query
                 |> updateWith Search GotSearchMsg
+                |> addCmdMsg msg
+
+        Account account ->
+            Account.init account.session
+                |> updateWith Account GotAccountMsg
                 |> addCmdMsg msg
 
 
