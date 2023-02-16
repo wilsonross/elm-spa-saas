@@ -186,7 +186,11 @@ viewMobileSearch model =
                         ++ " placeholder:grey-2"
                 ]
                 []
-            , button [ class "hidden", View.preventDefault Search ] []
+            , button
+                [ class "w-px h-px invisible pointer-events-none"
+                , View.preventDefault Search
+                ]
+                []
             , viewButtonImage [ class "h-5 w-5" ]
                 MobileSearchToggle
                 "/static/img/close.svg"
