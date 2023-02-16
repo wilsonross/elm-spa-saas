@@ -112,7 +112,7 @@ viewButton linkId =
                 ++ " text-lg leading-[1.625rem]"
         ]
         ("/cms/" ++ linkId)
-        "Lets Talk Buisness"
+        "Lets Talk Business"
 
 
 viewCarouselLoader : Status -> Html msg
