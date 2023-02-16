@@ -14,6 +14,7 @@
 </div>
 
 ## About
+
 <div>
   <br />
   <p>I initially started writing this project in <a target="_blank" href="https://www.typescriptlang.org/">TypeScript</a> using the <a target="_blank" href="https://nextjs.org/">Next.js</a> framework. A colleague recommended <a target="_blank" href="https://elm-lang.org/">Elm</a> to me last year, and I decided to try the functional paradigm. Everything in the project was rewritten. <a target="_blank" href="https://strapi.io/">Strapi</a> was initially chosen as a content management system to serve as an application back-end. During the change of languages, <a target="_blank" href="https://strapi.io/">Strapi</a> got dropped in favour of <a target="_blank" href="https://pocketbase.io/">PocketBase</a>.</p>
@@ -47,6 +48,16 @@
   </p>
   <br />
 </div>
+
+```bash
+git clone https://github.com/wilsonross/elm-spa-saas.git
+cd elm-spa-saas
+cp .env.sample .env
+npm ci
+npm start
+```
+
+<br />
 
 ## Roadmap
 
