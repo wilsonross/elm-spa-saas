@@ -70,8 +70,8 @@ viewCta : String -> Html msg
 viewCta linkId =
     div
         [ class <|
-            "flex flex-col justify-center mb-[3.75rem] md:mb-16 lg:mb-0"
-                ++ " h-[calc(100%_-_var(--home-carousel-height))]"
+            "flex flex-col justify-center mb-7 sm:mb-[3.75rem] md:mb-16"
+                ++ " lg:mb-0 h-[calc(100%_-_var(--home-carousel-height))]"
         ]
         [ viewTitle, viewDescription, viewButton linkId ]
 
@@ -163,8 +163,8 @@ viewGraphic =
     img
         [ src "/static/img/graphic.svg"
         , class <|
-            "lg:w-1/2 mb-[3.75rem] lg:mb-16 max-w-xl lg:max-w-xl self-end"
-                ++ " lg:self-center"
+            "lg:w-1/2 lg:mb-[3.75rem] lg:mb-16 max-w-xl lg:max-w-xl"
+                ++ " md:self-end lg:self-center"
         ]
         []
 
