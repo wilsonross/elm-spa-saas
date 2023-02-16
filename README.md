@@ -61,7 +61,24 @@ npm start
 
 ## Roadmap
 
+<br />
+
+- [x] Add cms page
+- [x] Add search page
+- [ ] Add account page
+  - [x] Page template
+  - [ ] Account management
+- [ ] Add static pages
+
+<br />
+
 ## Contact
+
+<br />
+
+Ross Wilson - [ross.wilson.190298@gmail.com](mailto:ross.wilson.190298@gmail.com)
+
+<br />
 
 
 
