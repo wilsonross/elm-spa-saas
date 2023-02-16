@@ -35,6 +35,19 @@
 
 ## Getting Started
 
+<div>
+  <br />
+  <p>
+    The npm package Elm is included in the installation. The Webpack
+    configuration also consists of an Elm loader. Additionally, the sample env
+    file contains the URL to the production API and the necessary content
+    management identifiers. Installing is simple as cloning using Git,
+    installing with npm, and renaming the sample env file. The Pocketbase schema
+    is included if you prefer to set it up with your back-end.
+  </p>
+  <br />
+</div>
+
 ## Roadmap
 
 ## Contact
