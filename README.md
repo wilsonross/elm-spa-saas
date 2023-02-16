@@ -24,6 +24,15 @@
 
 ## Built With
 
+<ul>
+  <br />
+  <li><a href="https://elm-lang.org/" target="_blank">Elm</a></li>
+  <li><a href="https://webpack.js.org/" target="_blank">Webpack</a></li>
+  <li><a href="https://postcss.org/" target="_blank">PostCSS</a></li>
+  <li><a href="https://tailwindcss.com/" target="_blank">TailwindCSS</a></li>
+  <br />
+</ul>
+
 ## Getting Started
 
 ## Roadmap
