@@ -99,7 +99,7 @@ viewDescription =
         ]
         [ text <|
             "Select a design or upload your own, send mail at the click of a"
-                ++ " button or code 💅"
+                ++ " button or code"
         ]
 
 
